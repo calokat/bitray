@@ -1,14 +1,15 @@
 use glam::Vec3;
 use ray_tracing_weekend_rs::color::Color;
+use ray_tracing_weekend_rs::hittable::Hittable;
 use ray_tracing_weekend_rs::ray::Ray;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::ops::{Div, Mul};
-
+use ray_tracing_weekend_rs::sphere::Sphere;
 fn hit_sphere(center: &Vec3, radius: f32, r: &Ray) -> Option<f32> {
     let oc: Vec3 = r.origin - *center;
     let a = r.direction.length_squared();
-    let half_b = Vec3::dot(oc, r.direction);
+    let half_b = oc.dot(r.direction);
     let c = oc.length_squared() - radius * radius;
     let discriminant = half_b * half_b - a * c;
     if discriminant < 0.0 {
@@ -18,14 +19,12 @@ fn hit_sphere(center: &Vec3, radius: f32, r: &Ray) -> Option<f32> {
     }
 }
 
-fn ray_color(ray: Ray) -> Color {
-    if let Some(t) = hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, &ray) {
-        let n = ray.at(t) - Vec3::new(0.0, 0.0, -1.0);
-        return Color::new(n.x + 1.0, n.y + 1.0, n.z + 1.0) * 0.5;
+fn ray_color(ray: &Ray, world: &dyn Hittable) -> Color {
+    if let Some(rec) = world.hit(ray, 0.0, f32::MAX) {
+        return (Color::new(1.0, 1.0, 1.0) + Color::new(rec.normal.x, rec.normal.y, rec.normal.z)) * 0.5;
     }
-    let unit_dir = ray.direction.normalize();
-    let a = 0.5 * (unit_dir.y + 1.0);
-    assert!(a >= 0.0 && a <= 1.0);
+    let unit_direction = ray.direction.normalize();
+    let a = 0.5 * (unit_direction.y + 1.0);
     return Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a;
 }
 
@@ -59,6 +58,12 @@ fn main() {
         .unwrap();
 
     write!(file_out, "P3\n {} {}\n 255\n", image_width, image_height).unwrap();
+    
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)),
+        Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
+    ];
+    
     for j in 0..image_height {
         for i in 0..image_width {
             let pixel_center =
@@ -66,7 +71,7 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let ray: Ray = Ray::new(camera_center, ray_direction);
 
-            let color = ray_color(ray);
+            let color = ray_color(&ray, &world);
 
             file_out
                 .write(color.to_ppm_str().into_bytes().as_ref())
