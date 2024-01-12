@@ -6,6 +6,8 @@ use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::ops::{Div, Mul};
 use ray_tracing_weekend_rs::sphere::Sphere;
+use ray_tracing_weekend_rs::interval::Interval;
+
 fn hit_sphere(center: &Vec3, radius: f32, r: &Ray) -> Option<f32> {
     let oc: Vec3 = r.origin - *center;
     let a = r.direction.length_squared();
@@ -20,7 +22,7 @@ fn hit_sphere(center: &Vec3, radius: f32, r: &Ray) -> Option<f32> {
 }
 
 fn ray_color(ray: &Ray, world: &dyn Hittable) -> Color {
-    if let Some(rec) = world.hit(ray, 0.0, f32::MAX) {
+    if let Some(rec) = world.hit(ray, Interval { min: 0.0, max: f32::MAX }) {
         return (Color::new(1.0, 1.0, 1.0) + Color::new(rec.normal.x, rec.normal.y, rec.normal.z)) * 0.5;
     }
     let unit_direction = ray.direction.normalize();

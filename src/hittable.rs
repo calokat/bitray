@@ -1,6 +1,8 @@
 use glam::Vec3;
 use std::vec::Vec;
 use crate::ray::Ray;
+use crate::interval::Interval;
+
 pub struct HitRecord {
     pub p: Vec3,
     pub normal: Vec3,
@@ -31,18 +33,18 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, r: &Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
         None
     }
 }
 
 impl Hittable for Vec<Box<dyn Hittable>> {
-    fn hit(&self, r: &Ray, ray_tmin: f32, ray_tmax: f32) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
         let mut rec = None;
-        let mut closest_so_far = ray_tmax;
+        let mut closest_so_far = ray_t.max;
 
         for object in self {
-            if let Some(hit_record) = object.hit(r, ray_tmin, closest_so_far) {
+            if let Some(hit_record) = object.hit(r, Interval { min: ray_t.min, max: closest_so_far }) {
                 closest_so_far = hit_record.t;
                 rec = Some(hit_record);
             }
