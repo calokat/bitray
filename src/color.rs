@@ -1,26 +1,26 @@
 use glam::Vec3;
 use std::{
-    ops::{Add, Mul},
+    ops::{Add, Mul, AddAssign},
     string::String,
 };
 
 pub struct Color(Vec3);
 
-fn to_ppm_value(f: f32) -> i32 {
-    return (255.999 * f) as i32;
-}
-
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Color {
         Color(Vec3 { x: r, y: g, z: b })
     }
-    pub fn to_ppm_str(&self) -> String {
+    pub fn to_ppm_str(&self, num_samples: i32) -> String {
         return format!(
             "{} {} {}\n",
-            to_ppm_value(self.0.x),
-            to_ppm_value(self.0.y),
-            to_ppm_value(self.0.z)
+            Self::to_ppm_value(self.0.x, num_samples),
+            Self::to_ppm_value(self.0.y, num_samples),
+            Self::to_ppm_value(self.0.z, num_samples)
         );
+    }
+    fn to_ppm_value(f: f32, num_samples: i32) -> i32 {
+        let scale = f32::clamp(1.0 / num_samples as f32, 0.0, 0.999);
+        return (255.999 * f * scale as f32) as i32;
     }
 }
 
@@ -35,5 +35,11 @@ impl Add for Color {
     type Output = Color;
     fn add(self, rhs: Self) -> Self::Output {
         return Color(self.0 + rhs.0);
+    }
+}
+
+impl AddAssign for Color {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = Self(self.0 + rhs.0);
     }
 }

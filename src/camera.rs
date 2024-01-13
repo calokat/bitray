@@ -5,6 +5,7 @@ use std::io::Write;
 use crate::ray::Ray;
 use crate::color::Color;
 use crate::interval::Interval;
+use rand::prelude::*;
 
 #[derive(Default)]
 pub struct Camera {
@@ -15,13 +16,15 @@ pub struct Camera {
     pixel00_loc: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    num_samples: i32,
 }
 
 impl Camera {
-    pub fn new(aspect: f32, width: i32) -> Self {
+    pub fn new(aspect: f32, width: i32, num_samples: i32) -> Self {
         let mut cam = Self::default();
         cam.aspect_ratio = aspect;
         cam.image_width = width;
+        cam.num_samples = num_samples;
         cam.initialize();
         cam
     }
@@ -38,16 +41,14 @@ impl Camera {
 
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                let pixel_center =
-                    self.pixel00_loc + (i as f32 * self.pixel_delta_u) + (j as f32 * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let ray: Ray = Ray::new(self.center, ray_direction);
-    
-                let color = Self::ray_color(&ray, world);
-    
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                for sample in 0..self.num_samples {
+                    let r = self.get_ray(i, j as f32);
+                    pixel_color = pixel_color + Self::ray_color(&r, world);
+                }    
                 file_out
-                    .write(color.to_ppm_str().into_bytes().as_ref())
-                    .unwrap();
+                .write(pixel_color.to_ppm_str(self.num_samples).into_bytes().as_ref())
+                .unwrap();
             }
         }    
     }
@@ -87,6 +88,22 @@ impl Camera {
         let unit_direction = ray.direction.normalize();
         let a = 0.5 * (unit_direction.y + 1.0);
         return Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a;
+    }
+
+    fn get_ray(&self, i: i32, j: f32) -> Ray {
+        let pixel_center = self.pixel00_loc + (i as f32 * self.pixel_delta_u) + (j as f32 * self.pixel_delta_v);
+        let pixel_sample = pixel_center + self.pixel_sample_square(); 
+        
+        let ray_direction = pixel_sample - self.center;
+
+        return Ray::new(self.center, ray_direction);
+    }
+
+    fn pixel_sample_square(&self) -> Vec3 {
+        let px: f32 = -0.5 + random::<f32>();
+        let py: f32 = -0.5 + random::<f32>();
+
+        return (px * self.pixel_delta_u) + (py * self.pixel_delta_v);
     }
     
 }
