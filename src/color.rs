@@ -4,6 +4,7 @@ use std::{
     string::String,
 };
 
+#[derive(Clone, Copy)]
 pub struct Color(Vec3);
 
 impl Color {
@@ -35,6 +36,14 @@ impl Mul<f32> for Color {
         return Color(self.0 * rhs);
     }
 }
+
+impl Mul<Color> for Color {
+    type Output = Color;
+    fn mul(self, rhs: Color) -> Self::Output {
+        return Color(self.0 * rhs.0);
+    }
+}
+
 
 impl Add for Color {
     type Output = Color;

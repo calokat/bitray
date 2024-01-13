@@ -53,6 +53,7 @@ impl Camera {
                 .write(pixel_color.to_ppm_str(self.num_samples).into_bytes().as_ref())
                 .unwrap();
             }
+            println!("Scanline {} complete", j);
         }    
     }
     fn initialize(&mut self) {
@@ -89,8 +90,11 @@ impl Camera {
             return Color::new(0.0, 0.0, 0.0);
         }
         if let Some(rec) = world.hit(ray, Interval { min: 0.001, max: f32::MAX }) {
-            let direction = rec.normal + rand_vec3::random_unit_vector();
-            return Self::ray_color(&Ray::new(rec.p, direction), world, depth - 1) * 0.5;
+            if let Some(mat_hit_res) = rec.material.scatter(ray, rec) {
+                return mat_hit_res.color * Self::ray_color(&mat_hit_res.ray, world, depth - 1);
+            } else {
+                return Color::new(0.0, 0.0, 0.0);
+            }
         }
         let unit_direction = ray.direction.normalize();
         let a = 0.5 * (unit_direction.y + 1.0);
