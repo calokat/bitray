@@ -8,7 +8,7 @@ fn main() {
         Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
     ];
 
-    let camera = Camera::new(16.0 / 9.0, 400, 50);
+    let camera = Camera::new(16.0 / 9.0, 400, 50, 50);
 
     camera.render(&world);
 }

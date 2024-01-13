@@ -1,6 +1,7 @@
 use glam::Vec3;
 use std::fs::OpenOptions;
 use crate::hittable::Hittable;
+use crate::rand_vec3;
 use std::io::Write;
 use crate::ray::Ray;
 use crate::color::Color;
@@ -17,14 +18,16 @@ pub struct Camera {
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     num_samples: i32,
+    max_depth: i32,
 }
 
 impl Camera {
-    pub fn new(aspect: f32, width: i32, num_samples: i32) -> Self {
+    pub fn new(aspect: f32, width: i32, num_samples: i32, max_depth: i32) -> Self {
         let mut cam = Self::default();
         cam.aspect_ratio = aspect;
         cam.image_width = width;
         cam.num_samples = num_samples;
+        cam.max_depth = max_depth;
         cam.initialize();
         cam
     }
@@ -44,7 +47,7 @@ impl Camera {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for sample in 0..self.num_samples {
                     let r = self.get_ray(i, j as f32);
-                    pixel_color = pixel_color + Self::ray_color(&r, world);
+                    pixel_color = pixel_color + Self::ray_color(&r, world, self.max_depth);
                 }    
                 file_out
                 .write(pixel_color.to_ppm_str(self.num_samples).into_bytes().as_ref())
@@ -81,9 +84,13 @@ impl Camera {
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
-    fn ray_color(ray: &Ray, world: &dyn Hittable) -> Color {
-        if let Some(rec) = world.hit(ray, Interval { min: 0.0, max: f32::MAX }) {
-            return (Color::new(1.0, 1.0, 1.0) + Color::new(rec.normal.x, rec.normal.y, rec.normal.z)) * 0.5;
+    fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+        if let Some(rec) = world.hit(ray, Interval { min: 0.001, max: f32::MAX }) {
+            let direction = rec.normal + rand_vec3::random_unit_vector();
+            return Self::ray_color(&Ray::new(rec.p, direction), world, depth - 1) * 0.5;
         }
         let unit_direction = ray.direction.normalize();
         let a = 0.5 * (unit_direction.y + 1.0);

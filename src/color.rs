@@ -20,7 +20,12 @@ impl Color {
     }
     fn to_ppm_value(f: f32, num_samples: i32) -> i32 {
         let scale = f32::clamp(1.0 / num_samples as f32, 0.0, 0.999);
-        return (255.999 * f * scale as f32) as i32;
+        let corrected = Self::linear_to_gamma(f * scale);
+        return (255.999 * corrected as f32) as i32;
+    }
+
+    fn linear_to_gamma(linear: f32) -> f32 {
+        linear.sqrt()
     }
 }
 
