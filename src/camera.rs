@@ -1,6 +1,7 @@
 use glam::Vec3;
 use core::time;
 use std::fs::OpenOptions;
+use std::num::NonZeroUsize;
 use std::thread;
 use crate::hittable::Hittable;
 use std::io::Write;
@@ -38,7 +39,7 @@ impl Camera {
         cam.image_width = width;
         cam.num_samples = num_samples;
         cam.max_depth = max_depth;
-        cam.vertical_fov = 120.0;
+        cam.vertical_fov = 90.0;
         cam.initialize();
         cam
     }
@@ -59,12 +60,39 @@ impl Camera {
         image.resize(self.image_height as usize, image_row.clone());
         let mut counter: i32 = self.image_width * self.image_height;
         let num_samples = self.num_samples;
-        for j in 0..self.image_height {
-            for i in 0..self.image_width {
+        let (mut i_counter, mut j_counter) = (0, 0);
+        for c in 0..std::thread::available_parallelism().unwrap_or(NonZeroUsize::new(1).unwrap()).into() {
+            let (i, j) = (i_counter, j_counter);
+            let tx_c = tx.clone();
+            thread::scope(move |s| {
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                for sample in 0..self.num_samples {
+                    let r = self.get_ray(i, j as f32);
+                    pixel_color = pixel_color + Self::ray_color(&r, &*world, self.max_depth);
+                }
+                let async_render_res = AsyncRenderResult {
+                    color: pixel_color,
+                    x: i,
+                    y: j,
+                };
+                tx_c.send(async_render_res).unwrap();
+            });
+        }
+        while j_counter < self.image_height {
+            if let Ok(AsyncRenderResult{color, x, y}) = rx.try_recv() {
+                image[y as usize][x as usize] = color;
+                counter -= 1;
+                i_counter += 1;
+                if i_counter >= self.image_width {
+                    j_counter += 1;
+                    println!("Row {} complete", j_counter);
+                    i_counter = 0;
+                }
                 let tx_c = tx.clone();
+                let (i, j) = (i_counter, j_counter);
                 thread::scope(move |s| {
                     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                    for sample in 0..num_samples {
+                    for sample in 0..self.num_samples {
                         let r = self.get_ray(i, j as f32);
                         pixel_color = pixel_color + Self::ray_color(&r, &*world, self.max_depth);
                     }
@@ -75,13 +103,6 @@ impl Camera {
                     };
                     tx_c.send(async_render_res).unwrap();
                 });
-            }
-        }
-        while counter > 0 {
-            if let Ok(AsyncRenderResult{color, x, y}) = rx.try_recv() {
-                image[y as usize][x as usize] = color;
-                println!("{}", counter);
-                counter -= 1;
             } else {
                 thread::sleep(time::Duration::from_millis(50));
             }
@@ -89,7 +110,7 @@ impl Camera {
 
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                file_out.write(image[j as usize][i as usize].to_ppm_str(num_samples).into_bytes().as_ref()).unwrap();
+                file_out.write(image[j as usize][i as usize].to_ppm_str(self.num_samples).into_bytes().as_ref()).unwrap();
             }
         }
     }
