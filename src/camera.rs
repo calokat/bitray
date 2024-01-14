@@ -1,13 +1,15 @@
 use glam::Vec3;
+use core::time;
 use std::fs::OpenOptions;
+use std::thread;
 use crate::hittable::Hittable;
-use crate::rand_vec3;
 use std::io::Write;
 use crate::ray::Ray;
 use crate::color::Color;
 use crate::interval::Interval;
 use rand::prelude::*;
 use std::f32::consts::PI;
+use std::sync::mpsc;
 
 #[derive(Default)]
 pub struct Camera {
@@ -21,6 +23,12 @@ pub struct Camera {
     num_samples: i32,
     max_depth: i32,
     vertical_fov: f32,
+}
+
+struct AsyncRenderResult {
+    color: Color,
+    x: i32,
+    y: i32,
 }
 
 impl Camera {
@@ -44,21 +52,48 @@ impl Camera {
         .unwrap();
 
         write!(file_out, "P3\n {} {}\n 255\n", self.image_width, self.image_height).unwrap();
+        let (tx, rx) = mpsc::channel::<AsyncRenderResult>();
+        let mut image_row: Vec<Color> = Vec::new();
+        image_row.resize(self.image_width as usize, Color::new(0.0, 0.0, 0.0));
+        let mut image: Vec<Vec<Color>> = Vec::new();
+        image.resize(self.image_height as usize, image_row.clone());
+        let mut counter: i32 = self.image_width * self.image_height;
+        let num_samples = self.num_samples;
+        for j in 0..self.image_height {
+            for i in 0..self.image_width {
+                let tx_c = tx.clone();
+                thread::scope(move |s| {
+                    let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                    for sample in 0..num_samples {
+                        let r = self.get_ray(i, j as f32);
+                        pixel_color = pixel_color + Self::ray_color(&r, &*world, self.max_depth);
+                    }
+                    let async_render_res = AsyncRenderResult {
+                        color: pixel_color,
+                        x: i,
+                        y: j,
+                    };
+                    tx_c.send(async_render_res).unwrap();
+                });
+            }
+        }
+        while counter > 0 {
+            if let Ok(AsyncRenderResult{color, x, y}) = rx.try_recv() {
+                image[y as usize][x as usize] = color;
+                println!("{}", counter);
+                counter -= 1;
+            } else {
+                thread::sleep(time::Duration::from_millis(50));
+            }
+        }
 
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for sample in 0..self.num_samples {
-                    let r = self.get_ray(i, j as f32);
-                    pixel_color = pixel_color + Self::ray_color(&r, world, self.max_depth);
-                }    
-                file_out
-                .write(pixel_color.to_ppm_str(self.num_samples).into_bytes().as_ref())
-                .unwrap();
+                file_out.write(image[j as usize][i as usize].to_ppm_str(num_samples).into_bytes().as_ref()).unwrap();
             }
-            println!("Scanline {} complete", j);
-        }    
+        }
     }
+    
     fn initialize(&mut self) {
         self.image_height = (self.image_width as f32 / self.aspect_ratio) as i32;
         self.image_height = if self.image_height < 1 {
