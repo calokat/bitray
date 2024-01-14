@@ -7,6 +7,7 @@ use crate::ray::Ray;
 use crate::color::Color;
 use crate::interval::Interval;
 use rand::prelude::*;
+use std::f32::consts::PI;
 
 #[derive(Default)]
 pub struct Camera {
@@ -19,6 +20,7 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     num_samples: i32,
     max_depth: i32,
+    vertical_fov: f32,
 }
 
 impl Camera {
@@ -28,6 +30,7 @@ impl Camera {
         cam.image_width = width;
         cam.num_samples = num_samples;
         cam.max_depth = max_depth;
+        cam.vertical_fov = 120.0;
         cam.initialize();
         cam
     }
@@ -68,7 +71,9 @@ impl Camera {
 
         // Determine viewport dimensions.
         let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let theta = self.vertical_fov * PI / 180.0;
+        let h = f32::tan(theta / 2.0);
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (self.image_width as f32 / self.image_height as f32);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
