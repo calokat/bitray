@@ -8,8 +8,8 @@ use ray_tracing_weekend_rs::color::Color;
 fn main() {
     let mat_ground = Lambert::new(Color::new(0.8, 0.8, 0.0));
     let mat_center = Lambert::new(Color::new(0.7, 0.3, 0.3));
-    let mat_left = Metal::new(Color::new(0.8, 0.8, 0.8));
-    let mat_right = Metal::new(Color::new(0.8, 0.6, 0.2));
+    let mat_left = Metal::new(Color::new(0.8, 0.8, 0.8), 0.9);
+    let mat_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.7);
     {
         let sphere2 = Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, &mat_ground);
         let sphere1 = Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &mat_center);
