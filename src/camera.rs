@@ -45,7 +45,7 @@ impl Camera {
         cam.image_width = width;
         cam.num_samples = num_samples;
         cam.max_depth = max_depth;
-        cam.vertical_fov = 30.0;
+        cam.vertical_fov = 20.0;
         cam.look_from = look_from;
         cam.look_at = look_at;
         cam.up = up;
@@ -142,7 +142,7 @@ impl Camera {
         let viewport_width = viewport_height * (self.image_width as f32 / self.image_height as f32);
 
         self.w = (self.look_from - self.look_at).normalize();
-        self.u = self.w.cross(self.up).normalize();
+        self.u = self.up.cross(self.w).normalize();
         self.v = self.w.cross(self.u);
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
         let viewport_u = viewport_width * self.u;
