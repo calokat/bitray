@@ -168,7 +168,7 @@ impl Camera {
         
         let ray_direction = pixel_sample - self.center;
 
-        return Ray::new(self.center, ray_direction);
+        return Ray::new(self.center, ray_direction.normalize());
     }
 
     fn pixel_sample_square(&self) -> Vec3 {

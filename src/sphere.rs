@@ -32,17 +32,16 @@ impl<'a> Hittable for Sphere<'a> {
         }
 
         let sqrtd = f32::sqrt(discriminant);
-        let root = (-half_b - sqrtd) / a;
+        let mut root = (-half_b - sqrtd) / a;
         if !ray_t.surrounds(root) {
-            let root = (-half_b + sqrtd) / a;
+            root = (-half_b + sqrtd) / a;
             if !ray_t.surrounds(root) {
                 return None;
             }
         }
         let p = r.at(root);
-        let t = root;
         let outward_normal  = (p - self.center) / self.radius;
-        let mut rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material);
+        let rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material);
         return Some(rec);
 
     }
