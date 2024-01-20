@@ -16,7 +16,7 @@ fn main() {
         let sphere2 = Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, &mat_ground);
         let sphere1 = Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &mat_center);
         let sphere3 = Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, &mat_glass);
-        let sphere4 = Sphere::new(Vec3::new(1.0, -0.0, -1.0), 0.5, &mat_glass);
+        let sphere4 = Sphere::new(Vec3::new(1.0, -0.0, -1.0), 0.5, &mat_right);
         let sphere5 = Sphere::new(Vec3::new(1.0, 0.0, -3.0), -0.2, &mat_center);
         let world: Vec<&dyn Hittable> = vec![
             &sphere1,
@@ -26,7 +26,7 @@ fn main() {
             &sphere5,
         ];
 
-        let camera = Camera::new(16.0 / 9.0, 400, 50, 50);
+        let camera = Camera::new(16.0 / 9.0, 400, 50, 50, Vec3::new(0.0, 10.0, 0.0), Vec3::ZERO, -Vec3::Z);
 
         camera.render(&world);
     }
