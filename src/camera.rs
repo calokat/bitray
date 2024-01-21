@@ -4,6 +4,7 @@ use std::fs::OpenOptions;
 use std::num::NonZeroUsize;
 use std::thread;
 use crate::hittable::Hittable;
+use crate::rand_vec3::{self, random_vec_unit_disk};
 use std::io::Write;
 use crate::ray::Ray;
 use crate::color::Color;
@@ -30,6 +31,10 @@ pub struct Camera {
     u: Vec3,
     v: Vec3,
     w: Vec3,
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
+    defocus_angle: f32,
+    focus_distance: f32,
 }
 
 struct AsyncRenderResult {
@@ -49,6 +54,8 @@ impl Camera {
         cam.look_from = look_from;
         cam.look_at = look_at;
         cam.up = up;
+        cam.defocus_angle = 1.0;
+        cam.focus_distance = 3.46;
         cam.initialize();
         cam
     }
@@ -136,9 +143,9 @@ impl Camera {
 
         // Determine viewport dimensions.
         let focal_length = (self.look_from - self.look_at).length();
-        let theta = self.vertical_fov * PI / 180.0;
+        let theta = self.vertical_fov.to_radians();
         let h = f32::tan(theta / 2.0);
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * self.focus_distance;
         let viewport_width = viewport_height * (self.image_width as f32 / self.image_height as f32);
 
         self.w = (self.look_from - self.look_at).normalize();
@@ -154,8 +161,12 @@ impl Camera {
 
         // Calculate the location of the upper left pixel.
         let viewport_upper_left =
-            self.center - focal_length * self.w - viewport_u / 2.0 - viewport_v / 2.0;
+            self.center - (self.focus_distance * self.w) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
+
+        let defocus_radius = self.focus_distance * f32::tan((self.defocus_angle / 2.0).to_radians());
+        self.defocus_disk_u = self.u * defocus_radius;
+        self.defocus_disk_v = self.v * defocus_radius;
     }
 
     fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
@@ -178,7 +189,8 @@ impl Camera {
         let pixel_center = self.pixel00_loc + (i as f32 * self.pixel_delta_u) + (j as f32 * self.pixel_delta_v);
         let pixel_sample = pixel_center + self.pixel_sample_square(); 
         
-        let ray_direction = pixel_sample - self.center;
+        let ray_origin = if self.defocus_angle <= 0.0 {self.center} else {self.defocus_disk_sample()};
+        let ray_direction = pixel_sample - ray_origin;
 
         return Ray::new(self.center, ray_direction.normalize());
     }
@@ -188,6 +200,11 @@ impl Camera {
         let py: f32 = -0.5 + random::<f32>();
 
         return (px * self.pixel_delta_u) + (py * self.pixel_delta_v);
+    }
+
+    fn defocus_disk_sample(&self) -> Vec3 {
+        let p = random_vec_unit_disk();
+        return self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v); 
     }
     
 }

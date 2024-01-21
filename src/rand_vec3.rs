@@ -47,3 +47,11 @@ pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
     let r_out_parallel =  -f32::sqrt(f32::abs(1.0 - r_out_perp.length_squared())) * *n;
     return r_out_perp + r_out_parallel;
 }
+
+pub fn random_vec_unit_disk() -> Vec3 {
+    Vec3 {
+        x: random(),
+        y: random(),
+        z: 0.0
+    }
+}

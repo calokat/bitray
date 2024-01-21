@@ -17,7 +17,6 @@ fn main() {
         let sphere1 = Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &mat_center);
         let sphere3 = Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, &mat_glass);
         let sphere4 = Sphere::new(Vec3::new(1.0, -0.0, -1.0), 0.5, &mat_right);
-        let sphere5 = Sphere::new(Vec3::new(1.0, 0.0, -3.0), -0.2, &mat_center);
         let world: Vec<&dyn Hittable> = vec![
             &sphere1,
             &sphere2,
