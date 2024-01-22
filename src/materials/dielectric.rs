@@ -37,6 +37,6 @@ impl Dielectric {
         // Use Schlick's approximation for reflectance.
         let r0 = (1.0-ref_idx) / (1.0+ref_idx);
         let r0 = r0*r0;
-        return r0 + (1.0-r0)*f32::powf((1.0 - cosine),5.0);
+        return r0 + (1.0-r0)*f32::powf(1.0 - cosine, 5.0);
     }
 }

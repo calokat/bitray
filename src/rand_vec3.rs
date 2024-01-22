@@ -20,7 +20,6 @@ pub fn random_vec_in_unit_sphere() -> Vec3 {
             return p;
         }
     }
-    unreachable!()
 }
 
 pub fn random_unit_vector() -> Vec3 {

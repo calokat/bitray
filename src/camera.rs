@@ -1,16 +1,12 @@
 use glam::Vec3;
-use core::time;
 use std::fs::OpenOptions;
-use std::num::NonZeroUsize;
-use std::thread;
 use crate::hittable::Hittable;
-use crate::rand_vec3::{self, random_vec_unit_disk};
+use crate::rand_vec3::random_vec_unit_disk;
 use std::io::Write;
 use crate::ray::Ray;
 use crate::color::Color;
 use crate::interval::Interval;
 use rand::prelude::*;
-use std::f32::consts::PI;
 use rayon::prelude::*;
 
 #[derive(Default)]
@@ -35,12 +31,6 @@ pub struct Camera {
     defocus_disk_v: Vec3,
     defocus_angle: f32,
     focus_distance: f32,
-}
-
-struct AsyncRenderResult {
-    color: Color,
-    x: i32,
-    y: i32,
 }
 
 impl Camera {
@@ -79,8 +69,8 @@ impl Camera {
         let rendered_image: Vec<Vec<Color>> = image.par_iter().map(|row| {
             row.iter().map(|(i, j)| {
                 let mut color = Color::new(0.0, 0.0, 0.0);
-                for sample in 0..self.num_samples {
-                    color += Self::ray_color(&self.get_ray(*i, *j as f32), world.clone(), self.max_depth);
+                for _ in 0..self.num_samples {
+                    color += Self::ray_color(&self.get_ray(*i, *j as f32), world, self.max_depth);
                 }
                 color
             }).collect()
@@ -105,7 +95,6 @@ impl Camera {
         self.center = self.look_from;
 
         // Determine viewport dimensions.
-        let focal_length = (self.look_from - self.look_at).length();
         let theta = self.vertical_fov.to_radians();
         let h = f32::tan(theta / 2.0);
         let viewport_height = 2.0 * h * self.focus_distance;

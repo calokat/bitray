@@ -7,7 +7,7 @@ pub struct Lambert {
 }
 
 impl Material for Lambert {
-    fn scatter(&self, r_in: &Ray, rec: &crate::hittable::HitRecord) -> Option<super::material::MaterialHitResult> {
+    fn scatter(&self, _r_in: &Ray, rec: &crate::hittable::HitRecord) -> Option<super::material::MaterialHitResult> {
         if !rec.front_face {
             return None;
         }

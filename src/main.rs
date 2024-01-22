@@ -9,7 +9,6 @@ use ray_tracing_weekend_rs::color::Color;
 fn main() {
     let mat_ground = Lambert::new(Color::new(0.8, 0.8, 0.0));
     let mat_center = Lambert::new(Color::new(0.7, 0.3, 0.3));
-    let mat_left = Metal::new(Color::new(0.8, 0.8, 0.8), 0.9);
     let mat_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.7);
     let mat_glass = Dielectric::new(1.5);
     {
