@@ -11,7 +11,7 @@ use crate::color::Color;
 use crate::interval::Interval;
 use rand::prelude::*;
 use std::f32::consts::PI;
-use std::sync::mpsc;
+use rayon::prelude::*;
 
 #[derive(Default)]
 pub struct Camera {
@@ -69,64 +69,27 @@ impl Camera {
         .unwrap();
 
         write!(file_out, "P3\n {} {}\n 255\n", self.image_width, self.image_height).unwrap();
-        let (tx, rx) = mpsc::channel::<AsyncRenderResult>();
-        let mut image_row: Vec<Color> = Vec::new();
-        image_row.resize(self.image_width as usize, Color::new(0.0, 0.0, 0.0));
-        let mut image: Vec<Vec<Color>> = Vec::new();
-        image.resize(self.image_height as usize, image_row.clone());
-        let mut counter: i32 = self.image_width * self.image_height;
-        let num_samples = self.num_samples;
-        let (mut i_counter, mut j_counter) = (0, 0);
-        for c in 0..std::thread::available_parallelism().unwrap_or(NonZeroUsize::new(1).unwrap()).into() {
-            let (i, j) = (i_counter, j_counter);
-            let tx_c = tx.clone();
-            thread::scope(move |s| {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for sample in 0..self.num_samples {
-                    let r = self.get_ray(i, j as f32);
-                    pixel_color = pixel_color + Self::ray_color(&r, &*world, self.max_depth);
-                }
-                let async_render_res = AsyncRenderResult {
-                    color: pixel_color,
-                    x: i,
-                    y: j,
-                };
-                tx_c.send(async_render_res).unwrap();
-            });
-        }
-        while j_counter < self.image_height {
-            if let Ok(AsyncRenderResult{color, x, y}) = rx.try_recv() {
-                image[y as usize][x as usize] = color;
-                counter -= 1;
-                i_counter += 1;
-                if i_counter >= self.image_width {
-                    j_counter += 1;
-                    println!("Row {} complete", j_counter);
-                    i_counter = 0;
-                }
-                let tx_c = tx.clone();
-                let (i, j) = (i_counter, j_counter);
-                thread::scope(move |s| {
-                    let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                    for sample in 0..self.num_samples {
-                        let r = self.get_ray(i, j as f32);
-                        pixel_color = pixel_color + Self::ray_color(&r, &*world, self.max_depth);
-                    }
-                    let async_render_res = AsyncRenderResult {
-                        color: pixel_color,
-                        x: i,
-                        y: j,
-                    };
-                    tx_c.send(async_render_res).unwrap();
-                });
-            } else {
-                thread::sleep(time::Duration::from_millis(50));
+        let input_row: Vec<(i32, i32)> = vec![(0, 0); self.image_width as usize];
+        let mut image: Vec<Vec<(i32, i32)>> = vec![input_row.clone(); self.image_height as usize];
+        for j in 0..image.len() {
+            for i in 0..input_row.len() {
+                image[j][i] = (j as i32, i as i32);
             }
         }
+        let rendered_image: Vec<Vec<Color>> = image.par_iter().map(|row| {
+            row.iter().map(|(i, j)| {
+                let mut color = Color::new(0.0, 0.0, 0.0);
+                for sample in 0..self.num_samples {
+                    color += Self::ray_color(&self.get_ray(*i, *j as f32), world.clone(), self.max_depth);
+                }
+                color
+            }).collect()
+        }).collect();
+        
 
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                file_out.write(image[j as usize][i as usize].to_ppm_str(self.num_samples).into_bytes().as_ref()).unwrap();
+                file_out.write(rendered_image[j as usize][i as usize].to_ppm_str(self.num_samples).into_bytes().as_ref()).unwrap();
             }
         }
     }
@@ -174,7 +137,7 @@ impl Camera {
             return Color::new(0.0, 0.0, 0.0);
         }
         if let Some(rec) = world.hit(ray, Interval { min: 0.001, max: f32::MAX }) {
-            if let Some(mat_hit_res) = rec.material.scatter(ray, rec) {
+            if let Some(mat_hit_res) = rec.material.scatter(ray, &rec) {
                 return mat_hit_res.color * Self::ray_color(&mat_hit_res.ray, world, depth - 1);
             } else {
                 return Color::new(0.0, 0.0, 0.0);

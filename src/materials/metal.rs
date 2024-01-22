@@ -8,7 +8,7 @@ pub struct Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: crate::hittable::HitRecord) -> Option<super::material::MaterialHitResult> {
+    fn scatter(&self, r_in: &Ray, rec: &crate::hittable::HitRecord) -> Option<super::material::MaterialHitResult> {
         let reflected = reflect(&r_in.direction, &rec.normal);
         let scattered = Ray::new(rec.p, reflected + self.fuzz * random_unit_vector());
         if rec.normal.dot(scattered.direction) < 0.0 {

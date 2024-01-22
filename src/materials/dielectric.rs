@@ -7,7 +7,7 @@ pub struct Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: &crate::ray::Ray, rec: crate::hittable::HitRecord) -> Option<MaterialHitResult> {
+    fn scatter(&self, r_in: &crate::ray::Ray, rec: &crate::hittable::HitRecord) -> Option<MaterialHitResult> {
         let refraction_ratio = if rec.front_face {1.0/self.index_of_refraction} else {self.index_of_refraction};
         let unit_direction = r_in.direction.normalize();
 
