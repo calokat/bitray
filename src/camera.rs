@@ -44,7 +44,7 @@ impl Camera {
         cam.look_from = look_from;
         cam.look_at = look_at;
         cam.up = up;
-        cam.defocus_angle = 1.0;
+        cam.defocus_angle = 0.0;
         cam.focus_distance = 3.46;
         cam.initialize();
         cam
