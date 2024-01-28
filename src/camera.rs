@@ -8,7 +8,7 @@ use crate::color::Color;
 use crate::interval::Interval;
 use rand::prelude::*;
 use rayon::prelude::*;
-
+use image::ImageBuffer;
 #[derive(Default)]
 pub struct Camera {
     pub aspect_ratio: f32,
@@ -51,14 +51,6 @@ impl Camera {
     }
 
     pub fn render(&self, world: &dyn Hittable) {
-
-        let mut file_out = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open("image.ppm")
-        .unwrap();
-
-        write!(file_out, "P3\n {} {}\n 255\n", self.image_width, self.image_height).unwrap();
         let input_row: Vec<(i32, i32)> = vec![(0, 0); self.image_width as usize];
         let mut image: Vec<Vec<(i32, i32)>> = vec![input_row.clone(); self.image_height as usize];
         for j in 0..image.len() {
@@ -77,11 +69,13 @@ impl Camera {
         }).collect();
         
 
-        for j in 0..self.image_height {
-            for i in 0..self.image_width {
-                file_out.write(rendered_image[j as usize][i as usize].to_ppm_str(self.num_samples).into_bytes().as_ref()).unwrap();
-            }
-        }
+        let img = ImageBuffer::from_fn(self.image_width as u32, self.image_height as u32, |x, y| {
+            let c = rendered_image[y as usize][x as usize];
+            image::Rgb(c.to_output_array(self.num_samples))
+        });
+        img.save("image.png").unwrap_or_else(|e| {
+            println!("Error: image could not be saved to disk. {}", e.to_string());
+        })
     }
     
     fn initialize(&mut self) {

@@ -11,22 +11,23 @@ impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Color {
         Color(Vec3 { x: r, y: g, z: b })
     }
-    pub fn to_ppm_str(&self, num_samples: i32) -> String {
-        return format!(
-            "{} {} {}\n",
-            Self::to_ppm_value(self.0.x, num_samples),
-            Self::to_ppm_value(self.0.y, num_samples),
-            Self::to_ppm_value(self.0.z, num_samples)
-        );
-    }
-    fn to_ppm_value(f: f32, num_samples: i32) -> i32 {
+
+    fn to_output_value(f: f32, num_samples: i32) -> u8 {
         let scale = f32::clamp(1.0 / num_samples as f32, 0.0, 0.999);
         let corrected = Self::linear_to_gamma(f * scale);
-        return (255.999 * corrected as f32) as i32;
+        return (255.999 * corrected) as u8;
     }
 
     fn linear_to_gamma(linear: f32) -> f32 {
         linear.sqrt()
+    }
+
+    pub fn to_output_array(&self, num_samples: i32) -> [u8; 3] {
+        return [
+            Self::to_output_value(self.0.x, num_samples),
+            Self::to_output_value(self.0.y, num_samples),
+            Self::to_output_value(self.0.z, num_samples)
+        ];
     }
 }
 
