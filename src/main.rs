@@ -23,7 +23,7 @@ fn main() {
             &sphere4,
         ];
 
-        let camera = Camera::new(16.0 / 9.0, 400, 50, 50, Vec3::new(-2.0, 2.0, 1.0), Vec3::new(0.0, 0.0, -1.0), Vec3::Y);
+        let camera = Camera::new(16.0 / 9.0, 800, 100, 50, Vec3::new(0.0, 4.0, 10.0), Vec3::new(1.5, -1.0, -1.0), Vec3::X);
 
         camera.render(&world);
     }
