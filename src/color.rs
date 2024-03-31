@@ -4,7 +4,7 @@ use std::{
     string::String,
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Color(Vec3);
 
 impl Color {

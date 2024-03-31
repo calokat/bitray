@@ -7,3 +7,4 @@ pub mod camera;
 pub mod rand_vec3;
 pub mod materials;
 pub mod mesh;
+pub mod triangle;

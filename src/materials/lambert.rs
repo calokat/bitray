@@ -8,9 +8,9 @@ pub struct Lambert {
 
 impl Material for Lambert {
     fn scatter(&self, _r_in: &Ray, rec: &crate::hittable::HitRecord) -> Option<super::material::MaterialHitResult> {
-        if !rec.front_face {
-            return None;
-        }
+        // if !rec.front_face {
+        //     return None;
+        // }
         let scatter_direction = rec.normal + crate::rand_vec3::random_unit_vector();
         let scattered_ray = Ray::new(rec.p, scatter_direction);
         if scatter_direction.abs().abs_diff_eq(Vec3::ZERO, 0.001) {

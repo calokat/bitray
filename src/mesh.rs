@@ -36,7 +36,11 @@ impl<'a> Hittable for Mesh<'a> {
                                 let normal = obj.normals[index];
                                 Vec3::new(normal.x as f32, normal.y as f32, normal.z as f32).normalize()
                             },
-                            None => Vec3::ZERO
+                            None => {
+                                let p0p1 = pos1 - pos0;
+                                let p0p2 = pos2 - pos0;
+                                -p0p1.cross(p0p2)
+                            }
                         };
 
                         if normal.dot(r.direction) == 0.0 {
