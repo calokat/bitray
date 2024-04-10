@@ -1,8 +1,11 @@
-pub mod color;
-pub mod ray;
-pub mod hittable;
-pub mod sphere;
-pub mod interval;
 pub mod camera;
-pub mod rand_vec3;
+pub mod color;
+pub mod hittable;
+pub mod interval;
 pub mod materials;
+pub mod mesh;
+pub mod rand_vec3;
+pub mod ray;
+pub mod sphere;
+pub mod triangle;
+pub mod vertex;

@@ -1,14 +1,14 @@
-use glam::Vec3;
-use std::fs::OpenOptions;
-use crate::hittable::Hittable;
-use crate::rand_vec3::random_vec_unit_disk;
-use std::io::Write;
-use crate::ray::Ray;
 use crate::color::Color;
+use crate::hittable::Hittable;
 use crate::interval::Interval;
+use crate::rand_vec3::random_vec_unit_disk;
+use crate::ray::Ray;
+use glam::Vec3;
+use image::ImageBuffer;
 use rand::prelude::*;
 use rayon::prelude::*;
-use image::ImageBuffer;
+use std::fs::OpenOptions;
+use std::io::Write;
 #[derive(Default)]
 pub struct Camera {
     pub aspect_ratio: f32,
@@ -34,7 +34,15 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect: f32, width: i32, num_samples: i32, max_depth: i32, look_from: Vec3, look_at: Vec3, up: Vec3) -> Self {
+    pub fn new(
+        aspect: f32,
+        width: i32,
+        num_samples: i32,
+        max_depth: i32,
+        look_from: Vec3,
+        look_at: Vec3,
+        up: Vec3,
+    ) -> Self {
         let mut cam = Self::default();
         cam.aspect_ratio = aspect;
         cam.image_width = width;
@@ -58,26 +66,35 @@ impl Camera {
                 image[j][i] = (j as i32, i as i32);
             }
         }
-        let rendered_image: Vec<Vec<Color>> = image.par_iter().map(|row| {
-            row.iter().map(|(i, j)| {
-                let mut color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..self.num_samples {
-                    color += Self::ray_color(&self.get_ray(*i, *j as f32), world, self.max_depth);
-                }
-                color
-            }).collect()
-        }).collect();
-        
+        let rendered_image: Vec<Vec<Color>> = image
+            .par_iter()
+            .map(|row| {
+                row.iter()
+                    .map(|(j, i)| {
+                        let mut color = Color::new(0.0, 0.0, 0.0);
+                        for _ in 0..self.num_samples {
+                            color += Self::ray_color(
+                                &self.get_ray(*i, *j as f32),
+                                world,
+                                self.max_depth,
+                            );
+                        }
+                        color
+                    })
+                    .collect()
+            })
+            .collect();
 
-        let img = ImageBuffer::from_fn(self.image_width as u32, self.image_height as u32, |x, y| {
-            let c = rendered_image[y as usize][x as usize];
-            image::Rgb(c.to_output_array(self.num_samples))
-        });
+        let img =
+            ImageBuffer::from_fn(self.image_width as u32, self.image_height as u32, |x, y| {
+                let c = rendered_image[y as usize][x as usize];
+                image::Rgb(c.to_output_array(self.num_samples))
+            });
         img.save("image.png").unwrap_or_else(|e| {
             println!("Error: image could not be saved to disk. {}", e.to_string());
         })
     }
-    
+
     fn initialize(&mut self) {
         self.image_height = (self.image_width as f32 / self.aspect_ratio) as i32;
         self.image_height = if self.image_height < 1 {
@@ -110,16 +127,23 @@ impl Camera {
             self.center - (self.focus_distance * self.w) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
 
-        let defocus_radius = self.focus_distance * f32::tan((self.defocus_angle / 2.0).to_radians());
+        let defocus_radius =
+            self.focus_distance * f32::tan((self.defocus_angle / 2.0).to_radians());
         self.defocus_disk_u = self.u * defocus_radius;
         self.defocus_disk_v = self.v * defocus_radius;
     }
 
     fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
         if depth <= 0 {
-            return Color::new(0.0, 0.0, 0.0);
+            return Color::new(1.0, 1.0, 1.0);
         }
-        if let Some(rec) = world.hit(ray, Interval { min: 0.001, max: f32::MAX }) {
+        if let Some(rec) = world.hit(
+            ray,
+            Interval {
+                min: 0.001,
+                max: f32::MAX,
+            },
+        ) {
             if let Some(mat_hit_res) = rec.material.scatter(ray, &rec) {
                 return mat_hit_res.color * Self::ray_color(&mat_hit_res.ray, world, depth - 1);
             } else {
@@ -132,10 +156,15 @@ impl Camera {
     }
 
     fn get_ray(&self, i: i32, j: f32) -> Ray {
-        let pixel_center = self.pixel00_loc + (i as f32 * self.pixel_delta_u) + (j as f32 * self.pixel_delta_v);
-        let pixel_sample = pixel_center + self.pixel_sample_square(); 
-        
-        let ray_origin = if self.defocus_angle <= 0.0 {self.center} else {self.defocus_disk_sample()};
+        let pixel_center =
+            self.pixel00_loc + (i as f32 * self.pixel_delta_u) + (j as f32 * self.pixel_delta_v);
+        let pixel_sample = pixel_center + self.pixel_sample_square();
+
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
+        } else {
+            self.defocus_disk_sample()
+        };
         let ray_direction = pixel_sample - ray_origin;
 
         return Ray::new(self.center, ray_direction.normalize());
@@ -150,7 +179,7 @@ impl Camera {
 
     fn defocus_disk_sample(&self) -> Vec3 {
         let p = random_vec_unit_disk();
-        return self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v); 
+        return self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v);
     }
-    
 }
+
