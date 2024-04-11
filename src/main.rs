@@ -13,7 +13,7 @@ fn main() {
     let mat_red = Lambert::new(Color::new(0.7, 0.3, 0.3));
     let mat_metal = Metal::new(Color::new(0.8, 0.8, 0.9), 0.3);
     let mat_glass = Dielectric::new(1.5);
-    let mesh_options = MeshOptions::from_file("sphere.obj".into());
+    let mesh_options = MeshOptions::from_file("box.obj".into());
     {
         let sphere2 = Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0, &mat_ground);
         let sphere1 = Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, &mat_red);
@@ -26,8 +26,8 @@ fn main() {
             16.0 / 9.0,
             600,
             100,
-            10,
-            Vec3::new(0.0, 5.0, 10.0),
+            20,
+            Vec3::new(0.0, 1.0, 10.0),
             Vec3::new(0.0, 0.0, -1.0),
             Vec3::Y,
         );
