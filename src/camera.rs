@@ -7,8 +7,6 @@ use glam::Vec3;
 use image::ImageBuffer;
 use rand::prelude::*;
 use rayon::prelude::*;
-use std::fs::OpenOptions;
-use std::io::Write;
 #[derive(Default)]
 pub struct Camera {
     pub aspect_ratio: f32,
@@ -182,4 +180,3 @@ impl Camera {
         return self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v);
     }
 }
-

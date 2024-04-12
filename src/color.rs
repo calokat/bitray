@@ -1,8 +1,5 @@
 use glam::Vec3;
-use std::{
-    ops::{Add, Mul, AddAssign},
-    string::String,
-};
+use std::ops::{Add, AddAssign, Mul};
 
 #[derive(Clone, Copy)]
 pub struct Color(Vec3);
@@ -26,7 +23,7 @@ impl Color {
         return [
             Self::to_output_value(self.0.x, num_samples),
             Self::to_output_value(self.0.y, num_samples),
-            Self::to_output_value(self.0.z, num_samples)
+            Self::to_output_value(self.0.z, num_samples),
         ];
     }
 }
@@ -44,7 +41,6 @@ impl Mul<Color> for Color {
         return Color(self.0 * rhs.0);
     }
 }
-
 
 impl Add for Color {
     type Output = Color;
