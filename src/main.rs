@@ -1,13 +1,13 @@
+use bitray::camera::Camera;
+use bitray::color::Color;
+use bitray::hittable::Hittable;
+use bitray::materials::dielectric::Dielectric;
+use bitray::materials::lambert::Lambert;
+use bitray::materials::metal::Metal;
+use bitray::mesh::Mesh;
+use bitray::mesh::MeshOptions;
+use bitray::sphere::Sphere;
 use glam::Vec3;
-use ray_tracing_weekend_rs::camera::Camera;
-use ray_tracing_weekend_rs::color::Color;
-use ray_tracing_weekend_rs::hittable::Hittable;
-use ray_tracing_weekend_rs::materials::dielectric::Dielectric;
-use ray_tracing_weekend_rs::materials::lambert::Lambert;
-use ray_tracing_weekend_rs::materials::metal::Metal;
-use ray_tracing_weekend_rs::mesh::Mesh;
-use ray_tracing_weekend_rs::mesh::MeshOptions;
-use ray_tracing_weekend_rs::sphere::Sphere;
 fn main() {
     let mat_ground = Lambert::new(Color::new(0.8, 0.8, 0.0));
     let mat_red = Lambert::new(Color::new(0.7, 0.3, 0.3));

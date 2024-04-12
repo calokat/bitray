@@ -1,5 +1,5 @@
 [package]
-name = "ray_tracing_weekend_rs"
+name = "bitray"
 version = "0.1.0"
 edition = "2021"
 
