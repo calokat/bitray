@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::fmt::Write;
 
@@ -65,14 +64,14 @@ impl MeshOptions {
     }
 }
 
-pub struct Mesh {
-    options: Box<MeshOptions>,
-    material: Box<dyn Material>,
+pub struct Mesh<'a> {
+    options: &'a MeshOptions,
+    material: &'a dyn Material,
     name: String,
 }
 
-impl Mesh {
-    pub fn new(options: Box<MeshOptions>, material: Box<dyn Material>, name: String) -> Self {
+impl<'a> Mesh<'a> {
+    pub fn new(options: &'a MeshOptions, material: &'a dyn Material, name: String) -> Self {
         Self {
             options,
             material,
@@ -81,7 +80,7 @@ impl Mesh {
     }
 }
 
-impl<'a> Hittable for Mesh {
+impl<'a> Hittable for Mesh<'a> {
     fn hit(
         &self,
         r: &crate::ray::Ray,
@@ -94,7 +93,7 @@ impl<'a> Hittable for Mesh {
                     intersection.t,
                     &intersection.normal,
                     r,
-                    self.material.borrow(),
+                    self.material,
                 ));
             }
         }
@@ -110,7 +109,7 @@ impl<'a> Hittable for Mesh {
     }
 }
 
-impl Debug for Mesh {
+impl<'a> Debug for Mesh<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(" Mesh ")?;
         f.write_str(&self.name)?;
