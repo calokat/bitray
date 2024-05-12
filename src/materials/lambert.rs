@@ -3,11 +3,15 @@ use crate::color::Color;
 use crate::ray::Ray;
 use glam::Vec3;
 pub struct Lambert {
-    albedo: Color
+    albedo: Color,
 }
 
 impl Material for Lambert {
-    fn scatter(&self, _r_in: &Ray, rec: &crate::hittable::HitRecord) -> Option<super::material::MaterialHitResult> {
+    fn scatter(
+        &self,
+        _r_in: &Ray,
+        rec: &crate::hittable::HitRecord,
+    ) -> Option<super::material::MaterialHitResult> {
         if !rec.front_face {
             return None;
         }
@@ -16,20 +20,19 @@ impl Material for Lambert {
         if scatter_direction.abs().abs_diff_eq(Vec3::ZERO, 0.001) {
             return Some(MaterialHitResult {
                 color: self.albedo,
-                ray: scattered_ray
-            })
+                ray: scattered_ray,
+            });
         }
         return Some(MaterialHitResult {
             color: self.albedo,
-            ray: scattered_ray
+            ray: scattered_ray,
         });
     }
 }
 
 impl Lambert {
     pub fn new(color: Color) -> Self {
-        Self {
-            albedo: color
-        }
+        Self { albedo: color }
     }
 }
+

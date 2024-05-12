@@ -4,7 +4,6 @@ use crate::materials::material::Material;
 use crate::ray::Ray;
 use core::fmt::Debug;
 use glam::Vec3;
-use std::fmt::Write;
 use std::vec::Vec;
 
 pub struct HitRecord<'a> {

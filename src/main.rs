@@ -14,7 +14,7 @@ fn main() {
     let mat_ground = Box::new(Lambert::new(Color::new(0.8, 0.8, 0.0)));
     let mat_red = Box::new(Lambert::new(Color::new(0.7, 0.3, 0.3)));
     let mat_metal = Box::new(Metal::new(Color::new(1.0, 1.0, 1.0), 0.0));
-    let mat_metal_2 = Box::new(Metal::new(Color::new(0.0, 0.0, 1.0), 1.0));
+    let mat_metal_2 = Box::new(Metal::new(Color::new(1.0, 0.0, 1.0), 1.0));
     let mat_glass = Box::new(Dielectric::new(1.5));
     let mesh_options = Box::new(MeshOptions::from_file("box.obj".into()));
     {
@@ -52,8 +52,8 @@ fn main() {
             600,
             100,
             20,
-            Vec3::new(20.0, 1.0, 6.0),
-            Vec3::new(0.0, 0.0, -1.0),
+            Vec3::new(0.0, 0.0, 10.0),
+            Vec3::new(0.0, 0.0, 0.0),
             Vec3::Y,
         );
 

@@ -1,4 +1,3 @@
-use crate::hittable::Hittable;
 use crate::interval::Interval;
 use glam::Vec3;
 

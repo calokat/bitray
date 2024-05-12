@@ -17,7 +17,7 @@ pub struct TriangleRayIntersection {
 }
 
 impl Triangle {
-    pub fn ray_hit(&self, r: &Ray, ray_t: &Interval) -> Option<TriangleRayIntersection> {
+    pub fn ray_hit(&self, r: &Ray, _ray_t: &Interval) -> Option<TriangleRayIntersection> {
         let v0v1 = self.v1.pos - self.v0.pos;
         let v0v2 = self.v2.pos - self.v0.pos;
         let pvec = r.direction.cross(v0v2);
