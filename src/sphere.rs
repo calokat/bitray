@@ -1,25 +1,30 @@
-use crate::hittable::{Hittable, HitRecord};
+use std::borrow::Borrow;
+use std::fmt::{Debug, Write};
+
+use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::materials::material::Material;
 use glam::Vec3;
 
-pub struct Sphere<'a> {
+pub struct Sphere {
     center: Vec3,
     radius: f32,
-    material: &'a dyn Material,
+    material: Box<dyn Material>,
+    name: String,
 }
 
-impl<'a> Sphere<'a> {
-    pub fn new(c: Vec3, r: f32, material: &'a dyn Material) -> Self {
+impl Sphere {
+    pub fn new(c: Vec3, r: f32, material: Box<dyn Material>, name: String) -> Self {
         Self {
             center: c,
             radius: r,
-            material
+            material,
+            name,
         }
     }
 }
 
-impl<'a> Hittable for Sphere<'a> {
+impl Hittable for Sphere {
     fn hit(&self, r: &crate::ray::Ray, ray_t: Interval) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
@@ -40,9 +45,28 @@ impl<'a> Hittable for Sphere<'a> {
             }
         }
         let p = r.at(root);
-        let outward_normal  = (p - self.center) / self.radius;
-        let rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material);
+        let outward_normal = (p - self.center) / self.radius;
+        let rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material.borrow());
         return Some(rec);
+    }
 
+    fn bounding_box(&self) -> crate::aabb::AABB {
+        crate::aabb::AABB::from_extrema(
+            self.center + Vec3::splat(self.radius),
+            self.center - Vec3::splat(self.radius),
+        )
+    }
+
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+}
+
+impl Debug for Sphere {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Sphere ")?;
+        f.write_str(&self.get_name())?;
+        f.write_char('\n')?;
+        Ok(())
     }
 }

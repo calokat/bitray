@@ -1,3 +1,8 @@
+use std::borrow::Borrow;
+use std::fmt::Debug;
+use std::fmt::Write;
+
+use crate::aabb::AABB;
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 use crate::materials::material::Material;
@@ -9,6 +14,7 @@ use russimp::scene::Scene;
 
 pub struct MeshOptions {
     triangles: Vec<Triangle>,
+    aabb: AABB,
 }
 
 impl MeshOptions {
@@ -20,6 +26,7 @@ impl MeshOptions {
                 PostProcess::CalculateTangentSpace,
                 PostProcess::JoinIdenticalVertices,
                 PostProcess::SortByPrimitiveType,
+                PostProcess::GenerateBoundingBoxes,
             ],
         )
         .unwrap();
@@ -47,22 +54,34 @@ impl MeshOptions {
             }
         }
 
-        Self { triangles }
+        let russimp_aabb = scene.meshes[0].aabb;
+        let aabb_min = Vec3::new(russimp_aabb.min.x, russimp_aabb.min.y, russimp_aabb.min.z);
+        let aabb_max = Vec3::new(russimp_aabb.max.x, russimp_aabb.max.y, russimp_aabb.max.z);
+
+        Self {
+            triangles,
+            aabb: AABB::from_extrema(aabb_min, aabb_max),
+        }
     }
 }
 
-pub struct Mesh<'a> {
-    options: &'a MeshOptions,
-    material: &'a dyn Material,
+pub struct Mesh {
+    options: Box<MeshOptions>,
+    material: Box<dyn Material>,
+    name: String,
 }
 
-impl<'a> Mesh<'a> {
-    pub fn new(options: &'a MeshOptions, material: &'a dyn Material) -> Self {
-        Self { options, material }
+impl Mesh {
+    pub fn new(options: Box<MeshOptions>, material: Box<dyn Material>, name: String) -> Self {
+        Self {
+            options,
+            material,
+            name,
+        }
     }
 }
 
-impl<'a> Hittable for Mesh<'a> {
+impl<'a> Hittable for Mesh {
     fn hit(
         &self,
         r: &crate::ray::Ray,
@@ -75,10 +94,27 @@ impl<'a> Hittable for Mesh<'a> {
                     intersection.t,
                     &intersection.normal,
                     r,
-                    self.material,
+                    self.material.borrow(),
                 ));
             }
         }
         return None;
+    }
+
+    fn bounding_box(&self) -> AABB {
+        self.options.aabb
+    }
+
+    fn get_name(&self) -> &String {
+        &self.name
+    }
+}
+
+impl Debug for Mesh {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(" Mesh ")?;
+        f.write_str(&self.name)?;
+        f.write_char('\n')?;
+        Ok(())
     }
 }
