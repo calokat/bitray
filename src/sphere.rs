@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::fmt::{Debug, Write};
 
 use crate::hittable::{HitRecord, Hittable};
@@ -6,15 +5,15 @@ use crate::interval::Interval;
 use crate::materials::material::Material;
 use glam::Vec3;
 
-pub struct Sphere {
+pub struct Sphere<'a> {
     center: Vec3,
     radius: f32,
-    material: Box<dyn Material>,
+    material: &'a dyn Material,
     name: String,
 }
 
-impl Sphere {
-    pub fn new(c: Vec3, r: f32, material: Box<dyn Material>, name: String) -> Self {
+impl<'a> Sphere<'a> {
+    pub fn new(c: Vec3, r: f32, material: &'a dyn Material, name: String) -> Self {
         Self {
             center: c,
             radius: r,
@@ -24,7 +23,7 @@ impl Sphere {
     }
 }
 
-impl Hittable for Sphere {
+impl<'a> Hittable for Sphere<'a> {
     fn hit(&self, r: &crate::ray::Ray, ray_t: Interval) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
@@ -46,7 +45,7 @@ impl Hittable for Sphere {
         }
         let p = r.at(root);
         let outward_normal = (p - self.center) / self.radius;
-        let rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material.borrow());
+        let rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material);
         return Some(rec);
     }
 
@@ -62,7 +61,7 @@ impl Hittable for Sphere {
     }
 }
 
-impl Debug for Sphere {
+impl<'a> Debug for Sphere<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("Sphere ")?;
         f.write_str(&self.get_name())?;
