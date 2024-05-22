@@ -13,7 +13,7 @@ fn main() {
     let mat_ground = Lambert::new(Color::new(0.8, 0.8, 0.0));
     let mat_red = Lambert::new(Color::new(0.7, 0.3, 0.3));
     let mat_metal = Metal::new(Color::new(1.0, 1.0, 1.0), 0.0);
-    let mat_metal_2 = Metal::new(Color::new(1.0, 0.0, 1.0), 1.0);
+    let mat_metal_2 = Metal::new(Color::new(0.8, 0.8, 0.9), 0.3);
     let mat_glass = Dielectric::new(1.5);
     let mesh_options = MeshOptions::from_file("box.obj".into());
     {
