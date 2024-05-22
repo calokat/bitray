@@ -39,6 +39,9 @@ impl Triangle {
         let normal =
             ((1.0 - u - v) * self.v0.normal + u * self.v1.normal + v * self.v2.normal).normalize();
         let t = v0v2.dot(qvec) * inv_det - 0.1;
+        if t < 0.0 {
+            return None;
+        }
         return Some(TriangleRayIntersection {
             t,
             normal,
