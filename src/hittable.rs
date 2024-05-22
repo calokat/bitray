@@ -50,14 +50,14 @@ pub trait Hittable: Send + Sync + Debug {
     fn get_name(&self) -> &String;
 }
 
-pub struct HittableList<'a, 'b> {
-    pub objects: Vec<&'a &'b dyn Hittable>,
+pub struct HittableList<'a> {
+    pub objects: Vec<&'a dyn Hittable>,
     aabb: AABB,
     name: String,
 }
 
-impl<'a, 'b> HittableList<'a, 'b> {
-    pub fn new(objects: Vec<&'a &'b dyn Hittable>) -> Self {
+impl<'a> HittableList<'a> {
+    pub fn new(objects: Vec<&'a dyn Hittable>) -> Self {
         let mut bb = AABB::default();
         for h in &objects {
             bb = bb.to_contain(&h.bounding_box());
@@ -70,7 +70,7 @@ impl<'a, 'b> HittableList<'a, 'b> {
     }
 }
 
-impl<'a, 'b> Hittable for HittableList<'a, 'b> {
+impl<'a> Hittable for HittableList<'a> {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
         let mut rec = None;
         let mut closest_so_far = ray_t.max;
@@ -100,7 +100,7 @@ impl<'a, 'b> Hittable for HittableList<'a, 'b> {
     }
 }
 
-impl<'a, 'b> Debug for HittableList<'a, 'b> {
+impl<'a> Debug for HittableList<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.name)?;
         for h in &self.objects {
