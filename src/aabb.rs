@@ -76,4 +76,12 @@ impl AABB {
             z: self.z.to_contain(&other.z),
         }
     }
+
+    pub fn min(&self) -> Vec3 {
+        Vec3 { x: self.x.min, y: self.y.min, z: self.z.min }
+    }
+
+    pub fn max(&self) -> Vec3 {
+        Vec3 { x: self.x.max, y: self.y.max, z: self.z.max }
+    }
 }
