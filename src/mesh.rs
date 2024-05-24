@@ -7,7 +7,7 @@ use crate::hittable::Hittable;
 use crate::materials::material::Material;
 use crate::triangle::Triangle;
 use crate::vertex::Vertex;
-use glam::Vec3;
+use glam::{Mat4, Vec3};
 use russimp::scene::PostProcess;
 use russimp::scene::Scene;
 
@@ -68,14 +68,21 @@ pub struct Mesh<'a> {
     options: &'a MeshOptions,
     material: &'a dyn Material,
     name: String,
+    transform: Mat4,
+    inverse_transform: Mat4,
+    aabb: AABB,
 }
 
 impl<'a> Mesh<'a> {
-    pub fn new(options: &'a MeshOptions, material: &'a dyn Material, name: String) -> Self {
+    pub fn new(options: &'a MeshOptions, material: &'a dyn Material, name: String, transform: Mat4) -> Self {
+        let aabb = AABB::from_extrema((transform * options.aabb.min().extend(1.0)).truncate(), (transform * options.aabb.max().extend(1.0)).truncate());
         Self {
             options,
             material,
             name,
+            transform,
+            inverse_transform: transform.inverse(),
+            aabb
         }
     }
 }
@@ -87,9 +94,12 @@ impl<'a> Hittable for Mesh<'a> {
         ray_t: crate::interval::Interval,
     ) -> Option<crate::hittable::HitRecord> {
         for t in self.options.triangles.iter() {
-            if let Some(intersection) = t.ray_hit(r, &ray_t) {
+            let mut rotated_ray = r.clone();
+            rotated_ray.origin = (self.inverse_transform * rotated_ray.origin.extend(1.0)).truncate();
+            rotated_ray.direction = (self.inverse_transform * rotated_ray.direction.extend(0.0)).truncate();
+            if let Some(intersection) = t.ray_hit(&rotated_ray, &ray_t) {
                 return Some(HitRecord::new(
-                    intersection.p,
+                    (self.transform * intersection.p.extend(1.0)).truncate(),
                     intersection.t,
                     &intersection.normal,
                     r,
@@ -101,7 +111,7 @@ impl<'a> Hittable for Mesh<'a> {
     }
 
     fn bounding_box(&self) -> AABB {
-        self.options.aabb
+        self.aabb
     }
 
     fn get_name(&self) -> &String {
