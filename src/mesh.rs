@@ -74,15 +74,20 @@ pub struct Mesh<'a> {
 }
 
 impl<'a> Mesh<'a> {
-    pub fn new(options: &'a MeshOptions, material: &'a dyn Material, name: String, transform: Mat4) -> Self {
-        let aabb = AABB::from_extrema((transform * options.aabb.min().extend(1.0)).truncate(), (transform * options.aabb.max().extend(1.0)).truncate());
+    pub fn new(
+        options: &'a MeshOptions,
+        material: &'a dyn Material,
+        name: String,
+        transform: Mat4,
+    ) -> Self {
+        let aabb = options.aabb.transform(transform);
         Self {
             options,
             material,
             name,
             transform,
             inverse_transform: transform.inverse(),
-            aabb
+            aabb,
         }
     }
 }
@@ -95,8 +100,10 @@ impl<'a> Hittable for Mesh<'a> {
     ) -> Option<crate::hittable::HitRecord> {
         for t in self.options.triangles.iter() {
             let mut rotated_ray = r.clone();
-            rotated_ray.origin = (self.inverse_transform * rotated_ray.origin.extend(1.0)).truncate();
-            rotated_ray.direction = (self.inverse_transform * rotated_ray.direction.extend(0.0)).truncate();
+            rotated_ray.origin =
+                (self.inverse_transform * rotated_ray.origin.extend(1.0)).truncate();
+            rotated_ray.direction =
+                (self.inverse_transform * rotated_ray.direction.extend(0.0)).truncate();
             if let Some(intersection) = t.ray_hit(&rotated_ray, &ray_t) {
                 return Some(HitRecord::new(
                     (self.transform * intersection.p.extend(1.0)).truncate(),

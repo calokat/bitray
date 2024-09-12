@@ -34,12 +34,6 @@ impl Interval {
         Self::new(f32::MIN, f32::MAX)
     }
 
-    pub fn expand(&mut self, delta: f32) {
-        let padding = delta / 2.0;
-        self.min -= padding;
-        self.max += padding;
-    }
-
     pub fn overlaps(&self, other: &Self) -> bool {
         let t_min = f32::max(self.min, other.min);
         let t_max = f32::min(self.max, other.max);
@@ -51,5 +45,21 @@ impl Interval {
             min: f32::min(self.min, other.min),
             max: f32::max(self.max, other.max),
         }
+    }
+
+    pub fn clamp_min(&mut self, clamp: f32) {
+        self.min = f32::max(self.min, clamp);
+    }
+
+    pub fn clamp_max(&mut self, clamp: f32) {
+        self.max = f32::min(self.max, clamp);
+    }
+
+    pub fn stretch_min(&mut self, stretch: f32) {
+        self.min = f32::min(self.min, stretch);
+    }
+
+    pub fn stretch_max(&mut self, stretch: f32) {
+        self.max = f32::max(self.max, stretch);
     }
 }

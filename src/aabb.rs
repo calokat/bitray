@@ -78,10 +78,49 @@ impl AABB {
     }
 
     pub fn min(&self) -> Vec3 {
-        Vec3 { x: self.x.min, y: self.y.min, z: self.z.min }
+        Vec3 {
+            x: self.x.min,
+            y: self.y.min,
+            z: self.z.min,
+        }
     }
 
     pub fn max(&self) -> Vec3 {
-        Vec3 { x: self.x.max, y: self.y.max, z: self.z.max }
+        Vec3 {
+            x: self.x.max,
+            y: self.y.max,
+            z: self.z.max,
+        }
+    }
+
+    fn get_points(&self) -> [Vec3; 8] {
+        return [
+            self.min(),
+            Vec3::new(self.x.min, self.y.min, self.z.max),
+            Vec3::new(self.x.min, self.y.max, self.z.max),
+            Vec3::new(self.x.min, self.y.max, self.z.min),
+            Vec3::new(self.x.max, self.y.min, self.z.min),
+            Vec3::new(self.x.max, self.y.min, self.z.max),
+            Vec3::new(self.x.max, self.y.max, self.z.max),
+            self.max(),
+        ];
+    }
+
+    fn from_points(points: [Vec3; 8]) -> Self {
+        let mut res: AABB = Default::default();
+        for p in points {
+            res.x.stretch_min(p.x);
+            res.x.stretch_max(p.x);
+            res.y.stretch_min(p.y);
+            res.y.stretch_max(p.y);
+            res.z.stretch_min(p.z);
+            res.z.stretch_max(p.z);
+        }
+        res
+    }
+
+    pub fn transform(&self, t: glam::Mat4) -> Self {
+        let transformed_points = self.get_points().map(|p| (t * p.extend(1.0)).truncate());
+        Self::from_points(transformed_points)
     }
 }
