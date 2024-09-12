@@ -42,7 +42,18 @@ fn main() {
             &mat_red,
             "Red Sphere".into(),
         );
-        let mesh = Mesh::new(&mesh_options, &mat_metal_2, "Box".into(), Mat4::from_translation(Vec3::new(0.0, 2.0, -5.0)) * Mat4::from_euler(glam::EulerRot::XYZ, 90.0f32.to_radians(), 45.0f32.to_radians(), 0.0f32.to_radians()));
+        let mesh = Mesh::new(
+            &mesh_options,
+            &mat_metal_2,
+            "Box".into(),
+            Mat4::from_translation(Vec3::new(0.0, 2.0, -5.0))
+                * Mat4::from_euler(
+                    glam::EulerRot::XYZ,
+                    90.0f32.to_radians(),
+                    45.0f32.to_radians(),
+                    0.0f32.to_radians(),
+                ),
+        );
         let objects: Vec<&dyn Hittable> = vec![
             &red_sphere,
             &glass_sphere,

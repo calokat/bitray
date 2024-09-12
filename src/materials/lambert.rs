@@ -35,4 +35,3 @@ impl Lambert {
         Self { albedo: color }
     }
 }
-

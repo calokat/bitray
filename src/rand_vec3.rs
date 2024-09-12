@@ -57,4 +57,3 @@ pub fn random_vec_unit_disk() -> Vec3 {
         z: 0.0,
     }
 }
-

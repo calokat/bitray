@@ -53,4 +53,3 @@ impl Dielectric {
         return r0 + (1.0 - r0) * f32::powf(1.0 - cosine, 5.0);
     }
 }
-

@@ -8,4 +8,3 @@ pub struct MaterialHitResult {
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<MaterialHitResult>;
 }
-
