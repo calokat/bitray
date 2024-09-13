@@ -1,7 +1,7 @@
 use glam::Vec3;
 use std::ops::{Add, AddAssign, Mul};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Color(Vec3);
 
 impl Color {

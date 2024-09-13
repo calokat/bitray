@@ -9,5 +9,6 @@ pub mod mesh;
 pub mod rand_vec3;
 pub mod ray;
 pub mod sphere;
+pub mod texture;
 pub mod triangle;
 pub mod vertex;

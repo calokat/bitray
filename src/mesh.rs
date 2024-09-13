@@ -7,9 +7,10 @@ use crate::hittable::Hittable;
 use crate::materials::material::Material;
 use crate::triangle::Triangle;
 use crate::vertex::Vertex;
+use glam::Vec2;
 use glam::{Mat4, Vec3};
-use russimp::scene::PostProcess;
-use russimp::scene::Scene;
+use russimp::scene::{PostProcess, Scene};
+use russimp::Vector3D;
 
 pub struct MeshOptions {
     triangles: Vec<Triangle>,
@@ -38,9 +39,22 @@ impl MeshOptions {
                 for i in f.0.iter() {
                     let pos = m.vertices[*i as usize];
                     let normal = m.normals[*i as usize];
+                    let uv = {
+                        let opt = m.texture_coords[0].clone();
+                        opt.unwrap_or(Vec::new())
+                            .get(*i as usize)
+                            .cloned()
+                            .unwrap_or(Vector3D {
+                                x: 0.0,
+                                y: 0.0,
+                                z: 0.0,
+                            })
+                    };
+
                     let v = Vertex {
                         pos: Vec3::new(pos.x, pos.y, pos.z),
                         normal: Vec3::new(normal.x, normal.y, normal.z),
+                        uv: Vec2::new(uv.x, uv.y),
                     };
                     triangle_face.push(v);
                 }
@@ -111,6 +125,7 @@ impl<'a> Hittable for Mesh<'a> {
                     &intersection.normal,
                     r,
                     self.material,
+                    intersection.uv,
                 ));
             }
         }

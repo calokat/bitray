@@ -1,12 +1,13 @@
 use super::material::{Material, MaterialHitResult};
 use crate::color::Color;
 use crate::ray::Ray;
+use crate::texture::Sampler2D;
 use glam::Vec3;
-pub struct Lambert {
-    albedo: Color,
+pub struct Lambert<'a> {
+    albedo: &'a dyn Sampler2D,
 }
 
-impl Material for Lambert {
+impl<'a> Material for Lambert<'a> {
     fn scatter(
         &self,
         _r_in: &Ray,
@@ -19,19 +20,19 @@ impl Material for Lambert {
         let scattered_ray = Ray::new(rec.p, scatter_direction);
         if scatter_direction.abs().abs_diff_eq(Vec3::ZERO, 0.001) {
             return Some(MaterialHitResult {
-                color: self.albedo,
+                color: self.albedo.sample(rec.uv),
                 ray: scattered_ray,
             });
         }
         return Some(MaterialHitResult {
-            color: self.albedo,
+            color: self.albedo.sample(rec.uv),
             ray: scattered_ray,
         });
     }
 }
 
-impl Lambert {
-    pub fn new(color: Color) -> Self {
+impl<'a> Lambert<'a> {
+    pub fn new(color: &'a dyn Sampler2D) -> Self {
         Self { albedo: color }
     }
 }

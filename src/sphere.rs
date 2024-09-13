@@ -1,9 +1,10 @@
+use std::f32::consts::PI;
 use std::fmt::{Debug, Write};
 
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::materials::material::Material;
-use glam::Vec3;
+use glam::{Vec2, Vec3};
 
 pub struct Sphere<'a> {
     center: Vec3,
@@ -20,6 +21,15 @@ impl<'a> Sphere<'a> {
             material,
             name,
         }
+    }
+
+    fn get_uv(p: Vec3) -> Vec2 {
+        let theta = f32::acos(-p.y);
+        let phi = f32::atan2(-p.z, p.x) + PI;
+
+        let u = phi / (2.0 * PI);
+        let v = theta / PI;
+        Vec2::new(u, v)
     }
 }
 
@@ -45,7 +55,8 @@ impl<'a> Hittable for Sphere<'a> {
         }
         let p = r.at(root);
         let outward_normal = (p - self.center) / self.radius;
-        let rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material);
+        let uv = Self::get_uv(p);
+        let rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material, uv);
         return Some(rec);
     }
 

@@ -3,7 +3,7 @@ use crate::interval::Interval;
 use crate::materials::material::Material;
 use crate::ray::Ray;
 use core::fmt::Debug;
-use glam::Vec3;
+use glam::{Vec2, Vec3};
 use std::vec::Vec;
 
 pub struct HitRecord<'a> {
@@ -12,6 +12,7 @@ pub struct HitRecord<'a> {
     pub t: f32,
     pub front_face: bool,
     pub material: &'a dyn Material,
+    pub uv: Vec2,
 }
 
 impl<'a> HitRecord<'a> {
@@ -21,6 +22,7 @@ impl<'a> HitRecord<'a> {
         outward_normal: &Vec3,
         r: &Ray,
         material: &'a dyn Material,
+        uv: Vec2,
     ) -> Self {
         let mut this = Self {
             p,
@@ -28,6 +30,7 @@ impl<'a> HitRecord<'a> {
             t,
             front_face: false,
             material,
+            uv,
         };
 
         this.set_face_normal(r, outward_normal);
