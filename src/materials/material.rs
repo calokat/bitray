@@ -7,4 +7,7 @@ pub struct MaterialHitResult {
 }
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<MaterialHitResult>;
+    fn emit_color(&self, _: &Ray, _: &HitRecord) -> Color {
+        return Color::new(0.0, 0.0, 0.0);
+    }
 }

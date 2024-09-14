@@ -29,6 +29,7 @@ pub struct Camera {
     defocus_disk_v: Vec3,
     defocus_angle: f32,
     focus_distance: f32,
+    background_color: Color,
 }
 
 impl Camera {
@@ -40,6 +41,7 @@ impl Camera {
         look_from: Vec3,
         look_at: Vec3,
         up: Vec3,
+        bg: Color,
     ) -> Self {
         let mut cam = Self::default();
         cam.aspect_ratio = aspect;
@@ -52,6 +54,7 @@ impl Camera {
         cam.up = up;
         cam.defocus_angle = 0.0;
         cam.focus_distance = 3.46;
+        cam.background_color = bg;
         cam.initialize();
         cam
     }
@@ -71,11 +74,8 @@ impl Camera {
                     .map(|(j, i)| {
                         let mut color = Color::new(0.0, 0.0, 0.0);
                         for _ in 0..self.num_samples {
-                            color += Self::ray_color(
-                                &self.get_ray(*i, *j as f32),
-                                world,
-                                self.max_depth,
-                            );
+                            color +=
+                                self.ray_color(&self.get_ray(*i, *j as f32), world, self.max_depth);
                         }
                         color
                     })
@@ -131,7 +131,7 @@ impl Camera {
         self.defocus_disk_v = self.v * defocus_radius;
     }
 
-    fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
+    fn ray_color(&self, ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
         if depth <= 0 {
             return Color::new(1.0, 1.0, 1.0);
         }
@@ -143,14 +143,13 @@ impl Camera {
             },
         ) {
             if let Some(mat_hit_res) = rec.material.scatter(ray, &rec) {
-                return mat_hit_res.color * Self::ray_color(&mat_hit_res.ray, world, depth - 1);
+                return mat_hit_res.color * self.ray_color(&mat_hit_res.ray, world, depth - 1);
             } else {
-                return Color::new(0.0, 0.0, 0.0);
+                return rec.material.emit_color(ray, &rec);
             }
         }
-        let unit_direction = ray.direction.normalize();
-        let a = 0.5 * (unit_direction.y + 1.0);
-        return Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a;
+
+        return self.background_color;
     }
 
     fn get_ray(&self, i: i32, j: f32) -> Ray {

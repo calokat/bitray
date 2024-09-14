@@ -3,6 +3,7 @@ use bitray::camera::Camera;
 use bitray::color::Color;
 use bitray::hittable::Hittable;
 use bitray::materials::dielectric::Dielectric;
+use bitray::materials::diffuse_light::DiffuseLightMaterial;
 use bitray::materials::lambert::Lambert;
 use bitray::materials::metal::Metal;
 use bitray::mesh::Mesh;
@@ -24,14 +25,15 @@ fn main() {
     let mat_ground = Lambert::new(&ground_texture);
     let mat_red = Lambert::new(&red_texture);
     let mat_metal = Metal::new(&metal_albedo, 0.0);
-    let mat_metal_2 = Metal::new(&metal_albedo, 0.1);
+    let mat_metal_2 = Metal::new(&red_texture, 0.1);
     let mat_glass = Dielectric::new(1.5);
+    let mat_light = DiffuseLightMaterial::new(Color::new(0.5, 3.0, 2.0));
     let mesh_options = MeshOptions::from_file("box.obj".into());
     {
         let green_sphere = Sphere::new(
             Vec3::new(0.0, -100.5, -1.0),
             100.0,
-            &mat_ground,
+            &mat_light,
             "Green Sphere".into(),
         );
         let metal_sphere = Sphere::new(
@@ -56,7 +58,7 @@ fn main() {
             &mesh_options,
             &mat_metal_2,
             "Box".into(),
-            Mat4::from_translation(Vec3::new(0.0, 2.0, -5.0))
+            Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0))
                 * Mat4::from_euler(
                     glam::EulerRot::XYZ,
                     90.0f32.to_radians(),
@@ -81,6 +83,7 @@ fn main() {
             Vec3::new(0.0, 0.0, 15.0),
             Vec3::new(0.0, 0.0, 0.0),
             Vec3::Y,
+            Color::new(0.02, 0.0, 0.0),
         );
 
         camera.render(&world);
