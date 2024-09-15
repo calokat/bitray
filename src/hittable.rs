@@ -19,7 +19,7 @@ impl<'a> HitRecord<'a> {
     pub fn new(
         p: Vec3,
         t: f32,
-        outward_normal: &Vec3,
+        outward_normal: Vec3,
         r: &Ray,
         material: &'a dyn Material,
         uv: Vec2,
@@ -33,7 +33,7 @@ impl<'a> HitRecord<'a> {
             uv,
         };
 
-        this.set_face_normal(r, outward_normal);
+        this.set_face_normal(r, &outward_normal);
 
         return this;
     }

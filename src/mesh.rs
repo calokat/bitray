@@ -122,7 +122,8 @@ impl<'a> Hittable for Mesh<'a> {
                 return Some(HitRecord::new(
                     (self.transform * intersection.p.extend(1.0)).truncate(),
                     intersection.t,
-                    &intersection.normal,
+                    (self.inverse_transform.transpose() * intersection.normal.extend(0.0))
+                        .truncate(),
                     r,
                     self.material,
                     intersection.uv,

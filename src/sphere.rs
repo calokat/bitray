@@ -56,7 +56,7 @@ impl<'a> Hittable for Sphere<'a> {
         let p = r.at(root);
         let outward_normal = (p - self.center) / self.radius;
         let uv = Self::get_uv(p);
-        let rec: HitRecord = HitRecord::new(p, root, &outward_normal, r, self.material, uv);
+        let rec: HitRecord = HitRecord::new(p, root, outward_normal, r, self.material, uv);
         return Some(rec);
     }
 

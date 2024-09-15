@@ -14,76 +14,106 @@ use bitray::texture::ImageTexture2D;
 use glam::Mat4;
 use glam::Vec3;
 fn main() {
-    let ground_texture = ColorTexture2D {
-        color: Color::new(0.8, 0.8, 0.0),
-    };
-    let red_texture = ColorTexture2D {
-        color: Color::new(0.7, 0.3, 0.3),
+    let grey_texture = ColorTexture2D {
+        color: Color::new(1.0, 1.0, 1.0),
     };
 
-    let metal_albedo = ImageTexture2D::new("earthmap.jpg".into());
-    let mat_ground = Lambert::new(&ground_texture);
+    let green_texture = ColorTexture2D {
+        color: Color::new(0.0, 1.0, 0.0),
+    };
+
+    let red_texture = ColorTexture2D {
+        color: Color::new(1.0, 0.0, 0.0),
+    };
+
+    let mat_green = Lambert::new(&green_texture);
+
     let mat_red = Lambert::new(&red_texture);
-    let mat_metal = Metal::new(&metal_albedo, 0.0);
-    let mat_metal_2 = Metal::new(&red_texture, 0.1);
-    let mat_glass = Dielectric::new(1.5);
-    let mat_light = DiffuseLightMaterial::new(Color::new(0.5, 3.0, 2.0));
+
+    let mat_metal = Lambert::new(&grey_texture);
+
+    let mat_light = DiffuseLightMaterial::new(Color::new(2.5, 2.5, 2.5));
+
     let mesh_options = MeshOptions::from_file("box.obj".into());
     {
-        let green_sphere = Sphere::new(
-            Vec3::new(0.0, -100.5, -1.0),
-            100.0,
-            &mat_light,
-            "Green Sphere".into(),
-        );
-        let metal_sphere = Sphere::new(
-            Vec3::new(1.0, 0.0, -1.0),
-            0.5,
-            &mat_metal,
-            "Metal Sphere".into(),
-        );
-        let glass_sphere = Sphere::new(
-            Vec3::new(-1.0, 0.0, -1.0),
-            0.5,
-            &mat_glass,
-            "Glass Sphere".into(),
-        );
-        let red_sphere = Sphere::new(
-            Vec3::new(0.0, 0.0, -1.0),
-            0.5,
-            &mat_red,
-            "Red Sphere".into(),
-        );
-        let mesh = Mesh::new(
+        let floor = Mesh::new(
             &mesh_options,
-            &mat_metal_2,
+            &mat_metal,
             "Box".into(),
-            Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0))
-                * Mat4::from_euler(
-                    glam::EulerRot::XYZ,
-                    90.0f32.to_radians(),
-                    45.0f32.to_radians(),
-                    0.0f32.to_radians(),
-                ),
+            Mat4::from_translation(Vec3::new(0.0, -2.0, -3.0))
+                * Mat4::from_scale(Vec3::new(9.0, 1.0, 9.0)),
         );
+
+        let wall_right = Mesh::new(
+            &mesh_options,
+            &mat_red,
+            "Box".into(),
+            Mat4::from_translation(Vec3::new(9.0, 3.0, 0.0))
+                * Mat4::from_scale(Vec3::new(1.0, 4.0, 9.0)),
+        );
+
+        let wall_left = Mesh::new(
+            &mesh_options,
+            &mat_green,
+            "Box".into(),
+            Mat4::from_translation(Vec3::new(-9.0, 3.0, 0.0))
+                * Mat4::from_scale(Vec3::new(1.0, 4.0, 9.0)),
+        );
+
+        let wall_back = Mesh::new(
+            &mesh_options,
+            &mat_metal,
+            "Box".into(),
+            Mat4::from_translation(Vec3::new(0.0, 2.0, -9.0))
+                * Mat4::from_scale(Vec3::new(9.0, 5.0, 3.0)),
+        );
+
+        let ceiling = Mesh::new(
+            &mesh_options,
+            &mat_light,
+            "Box".into(),
+            Mat4::from_translation(Vec3::new(0.0, 8.0, -3.0))
+                * Mat4::from_scale(Vec3::new(6.0, 0.2, 6.0)),
+        );
+
+        let tall_box = Mesh::new(
+            &mesh_options,
+            &mat_metal,
+            "Tall box".into(),
+            Mat4::from_translation(Vec3::new(-6.0, 1.0, -2.0))
+                * Mat4::from_rotation_y(25.0f32.to_radians())
+                * Mat4::from_scale(Vec3::new(1.0, 4.0, 1.0)),
+        );
+
+        let short_box = Mesh::new(
+            &mesh_options,
+            &mat_metal,
+            "Tall box".into(),
+            Mat4::from_translation(Vec3::new(6.0, 0.0, -1.0))
+                * Mat4::from_rotation_y(-25.0f32.to_radians())
+                * Mat4::from_scale(Vec3::new(1.0, 1.0, 1.0)),
+        );
+
         let objects: Vec<&dyn Hittable> = vec![
-            &red_sphere,
-            &glass_sphere,
-            &metal_sphere,
-            &mesh,
-            &green_sphere,
+            &floor,
+            &wall_right,
+            &wall_left,
+            &wall_back,
+            &ceiling,
+            &tall_box,
+            &short_box,
         ];
         let world = BVH::new(objects);
         // let world = HittableList::new(objects);
         let camera = Camera::new(
             16.0 / 9.0,
             600,
-            100,
+            1000,
             20,
-            Vec3::new(0.0, 0.0, 15.0),
-            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 5.0, 30.0),
+            Vec3::new(0.0, 3.0, 0.0),
             Vec3::Y,
-            Color::new(0.02, 0.0, 0.0),
+            Color::new(0.0, 0.0, 0.0),
         );
 
         camera.render(&world);
