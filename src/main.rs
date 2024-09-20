@@ -8,6 +8,7 @@ use bitray::materials::lambert::Lambert;
 use bitray::materials::metal::Metal;
 use bitray::mesh::Mesh;
 use bitray::mesh::MeshOptions;
+use bitray::quad::Quad;
 use bitray::sphere::Sphere;
 use bitray::texture::ColorTexture2D;
 use bitray::texture::ImageTexture2D;
@@ -26,13 +27,17 @@ fn main() {
         color: Color::new(1.0, 0.0, 0.0),
     };
 
+    let light_texture = ColorTexture2D {
+        color: Color::new(1.0, 1.0, 1.0)
+    };
+
     let mat_green = Lambert::new(&green_texture);
 
     let mat_red = Lambert::new(&red_texture);
 
     let mat_metal = Lambert::new(&grey_texture);
 
-    let mat_light = DiffuseLightMaterial::new(Color::new(2.5, 2.5, 2.5));
+    let mat_light = DiffuseLightMaterial::new(&light_texture);
 
     let mesh_options = MeshOptions::from_file("box.obj".into());
     {
@@ -68,13 +73,7 @@ fn main() {
                 * Mat4::from_scale(Vec3::new(9.0, 5.0, 3.0)),
         );
 
-        let ceiling = Mesh::new(
-            &mesh_options,
-            &mat_light,
-            "Box".into(),
-            Mat4::from_translation(Vec3::new(0.0, 8.0, -3.0))
-                * Mat4::from_scale(Vec3::new(6.0, 0.2, 6.0)),
-        );
+        let ceiling = Quad::new(Vec3::new(-5.0, 8.0, -3.0), Vec3::Z * 5.0, Vec3::X * 5.0, &mat_light);
 
         let tall_box = Mesh::new(
             &mesh_options,
@@ -108,7 +107,7 @@ fn main() {
         let camera = Camera::new(
             16.0 / 9.0,
             600,
-            1000,
+            100,
             20,
             Vec3::new(0.0, 5.0, 30.0),
             Vec3::new(0.0, 3.0, 0.0),

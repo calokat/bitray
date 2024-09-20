@@ -1,18 +1,18 @@
-use crate::color::Color;
+use crate::{color::Color, texture::Sampler2D};
 
 use super::material::Material;
 
-pub struct DiffuseLightMaterial {
-    color: Color,
+pub struct DiffuseLightMaterial<'a> {
+    color: &'a dyn Sampler2D,
 }
 
-impl DiffuseLightMaterial {
-    pub fn new(color: Color) -> Self {
+impl<'a> DiffuseLightMaterial<'a> {
+    pub fn new(color: &'a dyn Sampler2D) -> Self {
         Self { color }
     }
 }
 
-impl Material for DiffuseLightMaterial {
+impl<'a> Material for DiffuseLightMaterial<'a> {
     fn scatter(
         &self,
         _: &crate::ray::Ray,
@@ -21,7 +21,7 @@ impl Material for DiffuseLightMaterial {
         None
     }
 
-    fn emit_color(&self, _: &crate::ray::Ray, _: &crate::hittable::HitRecord) -> Color {
-        self.color
+    fn emit_color(&self, _: &crate::ray::Ray, hc: &crate::hittable::HitRecord) -> Color {
+        self.color.sample(hc.uv)
     }
 }

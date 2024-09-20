@@ -6,6 +6,7 @@ pub mod hittable;
 pub mod interval;
 pub mod materials;
 pub mod mesh;
+pub mod quad;
 pub mod rand_vec3;
 pub mod ray;
 pub mod sphere;
