@@ -109,6 +109,10 @@ impl<'a> Hittable for HittableList<'a> {
             acc + o.pdf_value(origin, direction)
         }) / self.objects.len() as f32
     }
+
+    fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {
+        self.objects.iter().fold(Vec3::ZERO, |acc, h| acc + h.random_vector_to_surface(origin)) / self.objects.len() as f32
+    }
 }
 
 impl<'a> Debug for HittableList<'a> {

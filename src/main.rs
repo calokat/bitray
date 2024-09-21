@@ -22,7 +22,7 @@ fn main() {
     };
 
     let light_texture = ColorTexture2D {
-        color: Color::new(1.0, 1.0, 1.0)
+        color: Color::new(10.0, 10.0, 10.0)
     };
 
     let mat_green = Lambert::new(&green_texture);
@@ -39,11 +39,11 @@ fn main() {
 
         let floor = Quad::new(Vec3::new(0.0, 0.0, 0.0), Vec3::Z * 555.0, Vec3::X * 555.0, &mat_lambert);
         let wall_back = Quad::new(Vec3::new(555.0, 0.0, 555.0), Vec3::X * -555.0, Vec3::Y * 555.0, &mat_lambert);
-        let ceiling = Quad::new(Vec3::new(0.0, 555.0, 0.0), Vec3::X * 555.0, Vec3::Z * 555.0, &mat_light);
-        let light = Quad::new(Vec3::new(13.0,554.0,27.0), Vec3::Z * 400.0, Vec3::X * 400.0, &mat_light);
+        let ceiling = Quad::new(Vec3::new(0.0, 555.0, 0.0), Vec3::X * 555.0, Vec3::Z * 555.0, &mat_lambert);
+        let light = Quad::new(Vec3::new(213.0,554.0,227.0), Vec3::Z * 105.0, Vec3::X * 130.0, &mat_light);
 
         let objects: Vec<&dyn Hittable> = vec![
-            // &light,
+            &light,
             &floor,
             &wall_left,
             &wall_right,
@@ -56,7 +56,7 @@ fn main() {
         let camera = Camera::new(
             1.0,
             600,
-            1000,
+            1500,
             20,
             Vec3::new(278.0, 278.0, -800.0),
             Vec3::new(278.0, 278.0, 0.0),
@@ -64,15 +64,10 @@ fn main() {
             Color::new(0.0, 0.0, 0.0),
         );
 
-        let mat_empty = EmptyMaterial {};
-
-        let importance_light = Quad::new(Vec3::new(13.0,554.0,27.0), Vec3::Z * 400.0, Vec3::X * 400.0, &mat_empty);
-
-
         let importants: HittableList = HittableList::new(vec![
-            &importance_light,
+            &light,
         ]);
 
-        camera.render(&world, &world);
+        camera.render(&world, &importants);
     }
 }

@@ -49,7 +49,7 @@ impl Camera {
         cam.image_width = width;
         cam.num_samples = num_samples;
         cam.max_depth = max_depth;
-        cam.vertical_fov = 60.0;
+        cam.vertical_fov = 40.0;
         cam.look_from = look_from;
         cam.look_at = look_at;
         cam.up = up;
@@ -78,6 +78,7 @@ impl Camera {
                             color +=
                                 self.ray_color(&self.get_ray(*i, *j as f32), world, important_objs, self.max_depth);
                         }
+                        color.correct_nans();
                         color
                     })
                     .collect()
@@ -154,8 +155,8 @@ impl Camera {
                 let pdf_value = mix_pdf.value(&scattered.direction);
                 let scattering_pdf = rec.material.scattering_pdf(ray, &rec, &scattered);
 
-                // return mat_hit_res.color * self.ray_color(&scattered, world, important_objs, depth - 1) * scattering_pdf / pdf_value.max(f32::EPSILON);
-                return mat_hit_res.color * self.ray_color(&mat_hit_res.ray, world, important_objs, depth - 1);
+                // return mat_hit_res.color * self.ray_color(&mat_hit_res.ray, world, important_objs, depth - 1);
+                return mat_hit_res.color * self.ray_color(&scattered, world, important_objs, depth - 1) * scattering_pdf / pdf_value;
             } else {
                 return rec.material.emit_color(ray, &rec);
             }

@@ -26,6 +26,18 @@ impl Color {
             Self::to_output_value(self.0.z, num_samples),
         ];
     }
+
+    pub fn correct_nans(&mut self) {
+        if self.0.x.is_nan() {
+            self.0.x = 0.0;
+        }
+        if self.0.y.is_nan() {
+            self.0.y = 0.0;
+        }
+        if self.0.z.is_nan() {
+            self.0.z = 0.0;
+        }
+    }
 }
 
 impl Mul<f32> for Color {
