@@ -1,5 +1,7 @@
 use super::material::{Material, MaterialHitResult};
 use crate::color::Color;
+use crate::onb::ONB;
+use crate::pdf::CosinePDF;
 use crate::ray::Ray;
 use crate::texture::Sampler2D;
 use glam::Vec3;
@@ -14,6 +16,7 @@ impl<'a> Material for Lambert<'a> {
         rec: &crate::hittable::HitRecord,
     ) -> Option<super::material::MaterialHitResult> {
         if !rec.front_face {
+            // println!("WAAAAAH");
             return None;
         }
         let scatter_direction = rec.normal + crate::rand_vec3::random_unit_vector();
@@ -22,12 +25,19 @@ impl<'a> Material for Lambert<'a> {
             return Some(MaterialHitResult {
                 color: self.albedo.sample(rec.uv),
                 ray: scattered_ray,
+                pdf: Some(Box::new(CosinePDF::new(ONB::new(&rec.normal))))
             });
         }
         return Some(MaterialHitResult {
             color: self.albedo.sample(rec.uv),
             ray: scattered_ray,
+            pdf: Some(Box::new(CosinePDF::new(ONB::new(&rec.normal))))
         });
+    }
+
+    fn scattering_pdf(&self, r_in: &Ray, hit_record: &crate::hittable::HitRecord, scattered_ray: &Ray) -> f32 {
+        let cos_theta = hit_record.normal.normalize().dot(scattered_ray.direction.normalize());
+        0.0f32.max(cos_theta / std::f32::consts::PI)
     }
 }
 

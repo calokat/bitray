@@ -1,7 +1,5 @@
 use crate::{
-    rand_vec3::{random_unit_vector, reflect},
-    ray::Ray,
-    texture::Sampler2D,
+    pdf::MixturePDF, rand_vec3::{random_unit_vector, reflect}, ray::Ray, texture::Sampler2D
 };
 
 use super::material::{Material, MaterialHitResult};
@@ -25,6 +23,7 @@ impl<'a> Material for Metal<'a> {
         return Some(MaterialHitResult {
             color: self.albedo.sample(rec.uv),
             ray: scattered,
+            pdf: None
         });
     }
 }

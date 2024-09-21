@@ -1,18 +1,12 @@
-use bitray::bvh::BVH;
 use bitray::camera::Camera;
 use bitray::color::Color;
 use bitray::hittable::Hittable;
-use bitray::materials::dielectric::Dielectric;
+use bitray::hittable::HittableList;
 use bitray::materials::diffuse_light::DiffuseLightMaterial;
 use bitray::materials::lambert::Lambert;
-use bitray::materials::metal::Metal;
-use bitray::mesh::Mesh;
-use bitray::mesh::MeshOptions;
+use bitray::materials::material::EmptyMaterial;
 use bitray::quad::Quad;
-use bitray::sphere::Sphere;
 use bitray::texture::ColorTexture2D;
-use bitray::texture::ImageTexture2D;
-use glam::Mat4;
 use glam::Vec3;
 fn main() {
     let grey_texture = ColorTexture2D {
@@ -20,7 +14,7 @@ fn main() {
     };
 
     let green_texture = ColorTexture2D {
-        color: Color::new(0.0, 1.0, 0.0),
+        color: Color::new(0.12, 0.45, 0.15),
     };
 
     let red_texture = ColorTexture2D {
@@ -35,86 +29,50 @@ fn main() {
 
     let mat_red = Lambert::new(&red_texture);
 
-    let mat_metal = Lambert::new(&grey_texture);
+    let mat_lambert = Lambert::new(&grey_texture);
 
     let mat_light = DiffuseLightMaterial::new(&light_texture);
 
-    let mesh_options = MeshOptions::from_file("box.obj".into());
     {
-        let floor = Mesh::new(
-            &mesh_options,
-            &mat_metal,
-            "Box".into(),
-            Mat4::from_translation(Vec3::new(0.0, -2.0, -3.0))
-                * Mat4::from_scale(Vec3::new(9.0, 1.0, 9.0)),
-        );
+        let wall_left = Quad::new(Vec3::new(555.0, 555.0, 0.0), Vec3::Y * -555.0, Vec3::Z * 555.0, &mat_green);
+        let wall_right = Quad::new(Vec3::new(0.0, 0.0, 555.0), -Vec3::Z * 555.0, Vec3::Y * 555.0, &mat_red);
 
-        let wall_right = Mesh::new(
-            &mesh_options,
-            &mat_red,
-            "Box".into(),
-            Mat4::from_translation(Vec3::new(9.0, 3.0, 0.0))
-                * Mat4::from_scale(Vec3::new(1.0, 4.0, 9.0)),
-        );
-
-        let wall_left = Mesh::new(
-            &mesh_options,
-            &mat_green,
-            "Box".into(),
-            Mat4::from_translation(Vec3::new(-9.0, 3.0, 0.0))
-                * Mat4::from_scale(Vec3::new(1.0, 4.0, 9.0)),
-        );
-
-        let wall_back = Mesh::new(
-            &mesh_options,
-            &mat_metal,
-            "Box".into(),
-            Mat4::from_translation(Vec3::new(0.0, 2.0, -9.0))
-                * Mat4::from_scale(Vec3::new(9.0, 5.0, 3.0)),
-        );
-
-        let ceiling = Quad::new(Vec3::new(-5.0, 8.0, -3.0), Vec3::Z * 5.0, Vec3::X * 5.0, &mat_light);
-
-        let tall_box = Mesh::new(
-            &mesh_options,
-            &mat_metal,
-            "Tall box".into(),
-            Mat4::from_translation(Vec3::new(-6.0, 1.0, -2.0))
-                * Mat4::from_rotation_y(25.0f32.to_radians())
-                * Mat4::from_scale(Vec3::new(1.0, 4.0, 1.0)),
-        );
-
-        let short_box = Mesh::new(
-            &mesh_options,
-            &mat_metal,
-            "Tall box".into(),
-            Mat4::from_translation(Vec3::new(6.0, 0.0, -1.0))
-                * Mat4::from_rotation_y(-25.0f32.to_radians())
-                * Mat4::from_scale(Vec3::new(1.0, 1.0, 1.0)),
-        );
+        let floor = Quad::new(Vec3::new(0.0, 0.0, 0.0), Vec3::Z * 555.0, Vec3::X * 555.0, &mat_lambert);
+        let wall_back = Quad::new(Vec3::new(555.0, 0.0, 555.0), Vec3::X * -555.0, Vec3::Y * 555.0, &mat_lambert);
+        let ceiling = Quad::new(Vec3::new(0.0, 555.0, 0.0), Vec3::X * 555.0, Vec3::Z * 555.0, &mat_light);
+        let light = Quad::new(Vec3::new(13.0,554.0,27.0), Vec3::Z * 400.0, Vec3::X * 400.0, &mat_light);
 
         let objects: Vec<&dyn Hittable> = vec![
+            // &light,
             &floor,
-            &wall_right,
             &wall_left,
+            &wall_right,
+            &floor,
             &wall_back,
             &ceiling,
-            &tall_box,
-            &short_box,
         ];
-        let world = BVH::new(objects);
+        let world: HittableList = HittableList::new(objects);
         // let world = HittableList::new(objects);
         let camera = Camera::new(
-            16.0 / 9.0,
+            1.0,
             600,
-            100,
+            1000,
             20,
-            Vec3::new(0.0, 5.0, 30.0),
-            Vec3::new(0.0, 3.0, 0.0),
+            Vec3::new(278.0, 278.0, -800.0),
+            Vec3::new(278.0, 278.0, 0.0),
             Vec3::Y,
             Color::new(0.0, 0.0, 0.0),
         );
 
-        camera.render(&world);
+        let mat_empty = EmptyMaterial {};
+
+        let importance_light = Quad::new(Vec3::new(13.0,554.0,27.0), Vec3::Z * 400.0, Vec3::X * 400.0, &mat_empty);
+
+
+        let importants: HittableList = HittableList::new(vec![
+            &importance_light,
+        ]);
+
+        camera.render(&world, &world);
     }
 }

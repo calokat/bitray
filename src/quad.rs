@@ -1,6 +1,7 @@
 use glam::{Vec2, Vec3};
 use std::fmt::{Debug, Write};
-use crate::{aabb::AABB, hittable::{HitRecord, Hittable}, interval::Interval, materials::material::Material};
+use rand::random;
+use crate::{aabb::AABB, hittable::{HitRecord, Hittable}, interval::Interval, materials::material::Material, ray::Ray};
 
 pub struct Quad<'a> {
     q: Vec3,
@@ -52,7 +53,7 @@ impl<'a> Quad<'a> {
 impl<'a> Hittable for Quad<'a> {
     fn hit(&self, r: &crate::ray::Ray, ray_t: crate::interval::Interval) -> Option<crate::hittable::HitRecord> {
         let denom = self.normal.dot(r.direction);
-        if denom < 1.0e-8 {
+        if denom.abs() < 1.0e-8 {
             return None;
         }
 
@@ -81,6 +82,22 @@ impl<'a> Hittable for Quad<'a> {
 
     fn get_name(&self) -> &String {
         &self.name
+    }
+
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f32 {
+        if let Some(hr) = self.hit(&Ray::new(*origin, *direction), Interval::new(0.0001, f32::MAX)) {
+            let distance_squared = hr.t * hr.t * direction.length_squared();
+            let cosine = direction.dot(hr.normal).abs() / direction.length();
+
+            return distance_squared / (cosine * self.area);
+        }
+
+        0.0
+    }
+
+    fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {
+        let p = self.q + self.u * random::<f32>() + self.v * random::<f32>();
+        return p - *origin;
     }
 }
 

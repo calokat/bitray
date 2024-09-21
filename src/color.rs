@@ -1,5 +1,5 @@
 use glam::Vec3;
-use std::ops::{Add, AddAssign, Mul};
+use std::ops::{Add, AddAssign, Div, Mul};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Color(Vec3);
@@ -52,5 +52,12 @@ impl Add for Color {
 impl AddAssign for Color {
     fn add_assign(&mut self, rhs: Self) {
         *self = Self(self.0 + rhs.0);
+    }
+}
+
+impl Div<f32> for Color {
+    type Output = Color;
+    fn div(self, rhs: f32) -> Self::Output {
+        Self(self.0 / rhs)
     }
 }

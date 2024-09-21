@@ -1,6 +1,7 @@
 use crate::color::Color;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
+use crate::pdf::{HittablePDF, MixturePDF, PDF};
 use crate::rand_vec3::random_vec_unit_disk;
 use crate::ray::Ray;
 use glam::Vec3;
@@ -48,7 +49,7 @@ impl Camera {
         cam.image_width = width;
         cam.num_samples = num_samples;
         cam.max_depth = max_depth;
-        cam.vertical_fov = 20.0;
+        cam.vertical_fov = 60.0;
         cam.look_from = look_from;
         cam.look_at = look_at;
         cam.up = up;
@@ -59,7 +60,7 @@ impl Camera {
         cam
     }
 
-    pub fn render(&self, world: &dyn Hittable) {
+    pub fn render(&self, world: &dyn Hittable, important_objs: &dyn Hittable) {
         let input_row: Vec<(i32, i32)> = vec![(0, 0); self.image_width as usize];
         let mut image: Vec<Vec<(i32, i32)>> = vec![input_row.clone(); self.image_height as usize];
         for j in 0..image.len() {
@@ -75,7 +76,7 @@ impl Camera {
                         let mut color = Color::new(0.0, 0.0, 0.0);
                         for _ in 0..self.num_samples {
                             color +=
-                                self.ray_color(&self.get_ray(*i, *j as f32), world, self.max_depth);
+                                self.ray_color(&self.get_ray(*i, *j as f32), world, important_objs, self.max_depth);
                         }
                         color
                     })
@@ -131,7 +132,7 @@ impl Camera {
         self.defocus_disk_v = self.v * defocus_radius;
     }
 
-    fn ray_color(&self, ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
+    fn ray_color(&self, ray: &Ray, world: &dyn Hittable, important_objs: &dyn Hittable, depth: i32) -> Color {
         if depth <= 0 {
             return Color::new(1.0, 1.0, 1.0);
         }
@@ -143,7 +144,18 @@ impl Camera {
             },
         ) {
             if let Some(mat_hit_res) = rec.material.scatter(ray, &rec) {
-                return mat_hit_res.color * self.ray_color(&mat_hit_res.ray, world, depth - 1);
+                if mat_hit_res.pdf.is_none() {
+                    return mat_hit_res.color * self.ray_color(&mat_hit_res.ray, world, important_objs, depth - 1);
+                }
+                let mat_pdf = mat_hit_res.pdf.unwrap();
+                let pdf = HittablePDF::new(rec.p, important_objs);
+                let mix_pdf = MixturePDF::new(&pdf, &*mat_pdf);
+                let scattered = Ray::new(rec.p, mix_pdf.generate());
+                let pdf_value = mix_pdf.value(&scattered.direction);
+                let scattering_pdf = rec.material.scattering_pdf(ray, &rec, &scattered);
+
+                // return mat_hit_res.color * self.ray_color(&scattered, world, important_objs, depth - 1) * scattering_pdf / pdf_value.max(f32::EPSILON);
+                return mat_hit_res.color * self.ray_color(&mat_hit_res.ray, world, important_objs, depth - 1);
             } else {
                 return rec.material.emit_color(ray, &rec);
             }

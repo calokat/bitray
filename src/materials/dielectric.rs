@@ -1,5 +1,6 @@
 use super::material::{Material, MaterialHitResult};
 use crate::color::Color;
+use crate::pdf::MixturePDF;
 use crate::rand_vec3::{reflect, refract};
 use crate::ray::Ray;
 pub struct Dielectric {
@@ -35,6 +36,7 @@ impl Material for Dielectric {
         return Some(MaterialHitResult {
             color: Color::new(1.0, 1.0, 1.0),
             ray: scattered,
+            pdf: None
         });
     }
 }

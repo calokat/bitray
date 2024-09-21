@@ -57,3 +57,14 @@ pub fn random_vec_unit_disk() -> Vec3 {
         z: 0.0,
     }
 }
+
+pub fn random_cosine_direction() -> Vec3 {
+    let r1 = random::<f32>();
+    let r2 = random::<f32>();
+
+    let phi = 2.0 * std::f32::consts::PI * r1;
+    let x = f32::cos(phi) * f32::sqrt(r2);
+    let y = f32::sin(phi) * f32::sqrt(r2);
+    let z = f32::sqrt(1.0 - r2);
+    Vec3::new(x, y, z)
+}

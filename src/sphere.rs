@@ -4,6 +4,7 @@ use std::fmt::{Debug, Write};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::materials::material::Material;
+use crate::ray::Ray;
 use glam::{Vec2, Vec3};
 
 pub struct Sphere<'a> {
@@ -69,6 +70,18 @@ impl<'a> Hittable for Sphere<'a> {
 
     fn get_name(&self) -> &String {
         &self.name
+    }
+
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f32 {
+        if let Some(_) = self.hit(&Ray::new(*origin, *direction), Interval::new(0.0001, f32::MAX)) {
+            let dist_squared = (self.center - *origin).length_squared();
+            let cos_theta_max = f32::sqrt(1.0 - self.radius * self.radius / dist_squared);
+            let solid_angle = 2.0 * std::f32::consts::PI * (1.0 - cos_theta_max);
+
+            return 1.0 / solid_angle;
+        }
+
+        0.0
     }
 }
 
