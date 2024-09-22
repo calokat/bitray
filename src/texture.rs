@@ -1,6 +1,6 @@
-use core::f32;
+use crate::Float;
 
-use glam::{Vec2, Vec3};
+use crate::{Vec2, Vec3};
 use image::io;
 
 use crate::color::Color;
@@ -45,11 +45,11 @@ impl Sampler2D for ImageTexture2D {
         let rgba = self
             .img
             .get_pixel(
-                ((self.img.width() as f32 * v.x) as u32).clamp(0, self.img.width() - 1),
-                ((self.img.height() as f32 * v.y) as u32).clamp(0, self.img.height() - 1),
+                ((self.img.width() as Float * v.x) as u32).clamp(0, self.img.width() - 1),
+                ((self.img.height() as Float * v.y) as u32).clamp(0, self.img.height() - 1),
             )
             .0
-            .map(|f| f as f32 / 255.0);
+            .map(|f| f as Float / 255.0);
         Color::new(rgba[0], rgba[1], rgba[2])
     }
 }

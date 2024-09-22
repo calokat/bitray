@@ -4,10 +4,9 @@ use bitray::hittable::Hittable;
 use bitray::hittable::HittableList;
 use bitray::materials::diffuse_light::DiffuseLightMaterial;
 use bitray::materials::lambert::Lambert;
-use bitray::materials::material::EmptyMaterial;
 use bitray::quad::Quad;
 use bitray::texture::ColorTexture2D;
-use glam::Vec3;
+use bitray::Vec3;
 fn main() {
     let grey_texture = ColorTexture2D {
         color: Color::new(1.0, 1.0, 1.0),

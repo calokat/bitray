@@ -1,10 +1,10 @@
 use super::material::{Material, MaterialHitResult};
 use crate::color::Color;
-use crate::pdf::MixturePDF;
+use crate::Float;
 use crate::rand_vec3::{reflect, refract};
 use crate::ray::Ray;
 pub struct Dielectric {
-    index_of_refraction: f32,
+    index_of_refraction: Float,
 }
 
 impl Material for Dielectric {
@@ -20,8 +20,8 @@ impl Material for Dielectric {
         };
         let unit_direction = r_in.direction.normalize();
 
-        let cos_theta = f32::min(rec.normal.dot(-unit_direction), 1.0);
-        let sin_theta = f32::sqrt(1.0 - cos_theta * cos_theta);
+        let cos_theta = Float::min(rec.normal.dot(-unit_direction), 1.0);
+        let sin_theta = Float::sqrt(1.0 - cos_theta * cos_theta);
 
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
 
@@ -42,16 +42,16 @@ impl Material for Dielectric {
 }
 
 impl Dielectric {
-    pub fn new(index_of_refraction: f32) -> Self {
+    pub fn new(index_of_refraction: Float) -> Self {
         Self {
             index_of_refraction,
         }
     }
 
-    fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
+    fn reflectance(cosine: Float, ref_idx: Float) -> Float {
         // Use Schlick's approximation for reflectance.
         let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
         let r0 = r0 * r0;
-        return r0 + (1.0 - r0) * f32::powf(1.0 - cosine, 5.0);
+        return r0 + (1.0 - r0) * Float::powf(1.0 - cosine, 5.0);
     }
 }

@@ -1,4 +1,4 @@
-use glam::{Vec2, Vec3};
+use crate::{Vec2, Vec3};
 
 #[derive(Copy, Clone)]
 pub struct Vertex {

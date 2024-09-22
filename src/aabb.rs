@@ -1,5 +1,5 @@
 use crate::interval::Interval;
-use glam::Vec3;
+use crate::{Mat4, Vec3};
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct AABB {
@@ -119,7 +119,7 @@ impl AABB {
         res
     }
 
-    pub fn transform(&self, t: glam::Mat4) -> Self {
+    pub fn transform(&self, t: Mat4) -> Self {
         let transformed_points = self.get_points().map(|p| (t * p.extend(1.0)).truncate());
         Self::from_points(transformed_points)
     }

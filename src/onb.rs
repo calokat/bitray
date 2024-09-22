@@ -1,4 +1,4 @@
-use glam::{Mat3, Vec3};
+use crate::{Mat3, Vec3};
 
 pub struct ONB(Mat3);
 

@@ -1,12 +1,12 @@
 use crate::{
-    pdf::MixturePDF, rand_vec3::{random_unit_vector, reflect}, ray::Ray, texture::Sampler2D
+    Float, rand_vec3::{random_unit_vector, reflect}, ray::Ray, texture::Sampler2D
 };
 
 use super::material::{Material, MaterialHitResult};
 
 pub struct Metal<'a> {
     albedo: &'a dyn Sampler2D,
-    fuzz: f32,
+    fuzz: Float,
 }
 
 impl<'a> Material for Metal<'a> {
@@ -29,7 +29,7 @@ impl<'a> Material for Metal<'a> {
 }
 
 impl<'a> Metal<'a> {
-    pub fn new(albedo: &'a dyn Sampler2D, fuzz: f32) -> Self {
+    pub fn new(albedo: &'a dyn Sampler2D, fuzz: Float) -> Self {
         return Self { albedo, fuzz };
     }
 }

@@ -1,11 +1,11 @@
-use std::f32::consts;
+use crate::{Float, PI};
 
-use glam::Vec3;
+use crate::Vec3;
 
 use crate::{hittable::Hittable, onb::ONB, rand_vec3::random_cosine_direction};
 
 pub trait PDF {
-    fn value(&self, direction: &Vec3) -> f32;
+    fn value(&self, direction: &Vec3) -> Float;
     fn generate(&self) -> Vec3;
 }
 
@@ -23,9 +23,9 @@ impl CosinePDF {
 
 
 impl PDF for CosinePDF {
-    fn value(&self, direction: &Vec3) -> f32 {
+    fn value(&self, direction: &Vec3) -> Float {
         let cosine_theta = direction.normalize().dot(self.uvw.w());
-        return (cosine_theta / consts::PI).max(0.0);
+        return (cosine_theta / PI).max(0.0);
     }
 
     fn generate(&self) -> Vec3 {
@@ -45,7 +45,7 @@ impl<'a> HittablePDF<'a> {
 }
 
 impl<'a> PDF for HittablePDF<'a> {
-    fn value(&self, direction: &Vec3) -> f32 {
+    fn value(&self, direction: &Vec3) -> Float {
         self.objects.pdf_value(&self.origin, direction)
     }
 
@@ -69,7 +69,7 @@ impl<'a> MixturePDF<'a> {
 
 impl<'a> PDF for MixturePDF<'a> {
     fn generate(&self) -> Vec3 {
-        let r: f32 = rand::random();
+        let r: Float = rand::random();
         if r < 0.5 {
             self.a.generate()
         } else {
@@ -77,8 +77,8 @@ impl<'a> PDF for MixturePDF<'a> {
         }
     }
 
-    fn value(&self, direction: &Vec3) -> f32 {
-        // let weight = 1.0 / self.mixed.len() as f32;
+    fn value(&self, direction: &Vec3) -> Float {
+        // let weight = 1.0 / self.mixed.len() as Float;
         // self.mixed.iter().fold(0.0, |acc, m| {
         //     acc + weight * m.value(direction)
         // })

@@ -1,21 +1,20 @@
-use std::f32::consts::PI;
+use crate::{Float, PI, Vec2, Vec3};
 use std::fmt::{Debug, Write};
 
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::materials::material::Material;
 use crate::ray::Ray;
-use glam::{Vec2, Vec3};
 
 pub struct Sphere<'a> {
     center: Vec3,
-    radius: f32,
+    radius: Float,
     material: &'a dyn Material,
     name: String,
 }
 
 impl<'a> Sphere<'a> {
-    pub fn new(c: Vec3, r: f32, material: &'a dyn Material, name: String) -> Self {
+    pub fn new(c: Vec3, r: Float, material: &'a dyn Material, name: String) -> Self {
         Self {
             center: c,
             radius: r,
@@ -25,8 +24,8 @@ impl<'a> Sphere<'a> {
     }
 
     fn get_uv(p: Vec3) -> Vec2 {
-        let theta = f32::acos(-p.y);
-        let phi = f32::atan2(-p.z, p.x) + PI;
+        let theta = Float::acos(-p.y);
+        let phi = Float::atan2(-p.z, p.x) + PI;
 
         let u = phi / (2.0 * PI);
         let v = theta / PI;
@@ -46,7 +45,7 @@ impl<'a> Hittable for Sphere<'a> {
             return None;
         }
 
-        let sqrtd = f32::sqrt(discriminant);
+        let sqrtd = Float::sqrt(discriminant);
         let mut root = (-half_b - sqrtd) / a;
         if !ray_t.surrounds(root) {
             root = (-half_b + sqrtd) / a;
@@ -72,11 +71,11 @@ impl<'a> Hittable for Sphere<'a> {
         &self.name
     }
 
-    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f32 {
-        if let Some(_) = self.hit(&Ray::new(*origin, *direction), Interval::new(0.0001, f32::MAX)) {
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {
+        if let Some(_) = self.hit(&Ray::new(*origin, *direction), Interval::new(0.0001, Float::MAX)) {
             let dist_squared = (self.center - *origin).length_squared();
-            let cos_theta_max = f32::sqrt(1.0 - self.radius * self.radius / dist_squared);
-            let solid_angle = 2.0 * std::f32::consts::PI * (1.0 - cos_theta_max);
+            let cos_theta_max = Float::sqrt(1.0 - self.radius * self.radius / dist_squared);
+            let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
 
             return 1.0 / solid_angle;
         }

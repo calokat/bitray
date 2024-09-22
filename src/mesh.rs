@@ -7,8 +7,8 @@ use crate::hittable::Hittable;
 use crate::materials::material::Material;
 use crate::triangle::Triangle;
 use crate::vertex::Vertex;
-use glam::Vec2;
-use glam::{Mat4, Vec3};
+use crate::Float;
+use crate::{Mat4, Vec2, Vec3};
 use russimp::scene::{PostProcess, Scene};
 use russimp::Vector3D;
 
@@ -52,9 +52,9 @@ impl MeshOptions {
                     };
 
                     let v = Vertex {
-                        pos: Vec3::new(pos.x, pos.y, pos.z),
-                        normal: Vec3::new(normal.x, normal.y, normal.z),
-                        uv: Vec2::new(uv.x, uv.y),
+                        pos: Vec3::new(pos.x as Float, pos.y as Float, pos.z as Float),
+                        normal: Vec3::new(normal.x as Float, normal.y as Float, normal.z as Float),
+                        uv: Vec2::new(uv.x as Float, uv.y as Float),
                     };
                     triangle_face.push(v);
                 }
@@ -68,8 +68,8 @@ impl MeshOptions {
         }
 
         let russimp_aabb = scene.meshes[0].aabb;
-        let aabb_min = Vec3::new(russimp_aabb.min.x, russimp_aabb.min.y, russimp_aabb.min.z);
-        let aabb_max = Vec3::new(russimp_aabb.max.x, russimp_aabb.max.y, russimp_aabb.max.z);
+        let aabb_min = Vec3::new(russimp_aabb.min.x as Float, russimp_aabb.min.y as Float, russimp_aabb.min.z as Float);
+        let aabb_max = Vec3::new(russimp_aabb.max.x as Float, russimp_aabb.max.y as Float, russimp_aabb.max.z as Float);
 
         Self {
             triangles,

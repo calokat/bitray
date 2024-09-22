@@ -1,15 +1,16 @@
-use crate::aabb::AABB;
+use crate::{aabb::AABB, Vec3};
 use crate::interval::Interval;
 use crate::materials::material::Material;
 use crate::ray::Ray;
+use crate::Float;
 use core::fmt::Debug;
-use glam::{Vec2, Vec3};
+use crate::Vec2;
 use std::vec::Vec;
 
 pub struct HitRecord<'a> {
     pub p: Vec3,
     pub normal: Vec3,
-    pub t: f32,
+    pub t: Float,
     pub front_face: bool,
     pub material: &'a dyn Material,
     pub uv: Vec2,
@@ -18,7 +19,7 @@ pub struct HitRecord<'a> {
 impl<'a> HitRecord<'a> {
     pub fn new(
         p: Vec3,
-        t: f32,
+        t: Float,
         outward_normal: Vec3,
         r: &Ray,
         material: &'a dyn Material,
@@ -51,7 +52,7 @@ pub trait Hittable: Send + Sync + Debug {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
     fn bounding_box(&self) -> AABB;
     fn get_name(&self) -> &String;
-    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f32 {1.0}
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {1.0}
     fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {Vec3::X}
 }
 
@@ -104,14 +105,14 @@ impl<'a> Hittable for HittableList<'a> {
         return &self.name;
     }
 
-    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f32 {
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {
         self.objects.iter().fold(0.0, |acc, o| {
             acc + o.pdf_value(origin, direction)
-        }) / self.objects.len() as f32
+        }) / self.objects.len() as Float
     }
 
     fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {
-        self.objects.iter().fold(Vec3::ZERO, |acc, h| acc + h.random_vector_to_surface(origin)) / self.objects.len() as f32
+        self.objects.iter().fold(Vec3::ZERO, |acc, h| acc + h.random_vector_to_surface(origin)) / self.objects.len() as Float
     }
 }
 

@@ -4,13 +4,14 @@ use crate::interval::Interval;
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
 use crate::rand_vec3::random_vec_unit_disk;
 use crate::ray::Ray;
-use glam::Vec3;
+use crate::Float;
+use crate::Vec3;
 use image::ImageBuffer;
 use rand::prelude::*;
 use rayon::prelude::*;
 #[derive(Default)]
 pub struct Camera {
-    pub aspect_ratio: f32,
+    pub aspect_ratio: Float,
     pub image_width: i32,
     image_height: i32,
     center: Vec3,
@@ -19,7 +20,7 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     num_samples: i32,
     max_depth: i32,
-    vertical_fov: f32,
+    vertical_fov: Float,
     pub look_from: Vec3,
     pub look_at: Vec3,
     pub up: Vec3,
@@ -28,14 +29,14 @@ pub struct Camera {
     w: Vec3,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
-    defocus_angle: f32,
-    focus_distance: f32,
+    defocus_angle: Float,
+    focus_distance: Float,
     background_color: Color,
 }
 
 impl Camera {
     pub fn new(
-        aspect: f32,
+        aspect: Float,
         width: i32,
         num_samples: i32,
         max_depth: i32,
@@ -76,7 +77,7 @@ impl Camera {
                         let mut color = Color::new(0.0, 0.0, 0.0);
                         for _ in 0..self.num_samples {
                             color +=
-                                self.ray_color(&self.get_ray(*i, *j as f32), world, important_objs, self.max_depth);
+                                self.ray_color(&self.get_ray(*i, *j as Float), world, important_objs, self.max_depth);
                         }
                         color.correct_nans();
                         color
@@ -96,7 +97,7 @@ impl Camera {
     }
 
     fn initialize(&mut self) {
-        self.image_height = (self.image_width as f32 / self.aspect_ratio) as i32;
+        self.image_height = (self.image_width as Float / self.aspect_ratio) as i32;
         self.image_height = if self.image_height < 1 {
             1
         } else {
@@ -107,9 +108,9 @@ impl Camera {
 
         // Determine viewport dimensions.
         let theta = self.vertical_fov.to_radians();
-        let h = f32::tan(theta / 2.0);
+        let h = Float::tan(theta / 2.0);
         let viewport_height = 2.0 * h * self.focus_distance;
-        let viewport_width = viewport_height * (self.image_width as f32 / self.image_height as f32);
+        let viewport_width = viewport_height * (self.image_width as Float / self.image_height as Float);
 
         self.w = (self.look_from - self.look_at).normalize();
         self.u = self.up.cross(self.w).normalize();
@@ -119,8 +120,8 @@ impl Camera {
         let viewport_v = viewport_height * -self.v;
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-        self.pixel_delta_u = viewport_u / self.image_width as f32;
-        self.pixel_delta_v = viewport_v / self.image_height as f32;
+        self.pixel_delta_u = viewport_u / self.image_width as Float;
+        self.pixel_delta_v = viewport_v / self.image_height as Float;
 
         // Calculate the location of the upper left pixel.
         let viewport_upper_left =
@@ -128,7 +129,7 @@ impl Camera {
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
 
         let defocus_radius =
-            self.focus_distance * f32::tan((self.defocus_angle / 2.0).to_radians());
+            self.focus_distance * Float::tan((self.defocus_angle / 2.0).to_radians());
         self.defocus_disk_u = self.u * defocus_radius;
         self.defocus_disk_v = self.v * defocus_radius;
     }
@@ -141,7 +142,7 @@ impl Camera {
             ray,
             Interval {
                 min: 0.001,
-                max: f32::MAX,
+                max: Float::MAX,
             },
         ) {
             if let Some(mat_hit_res) = rec.material.scatter(ray, &rec) {
@@ -165,9 +166,9 @@ impl Camera {
         return self.background_color;
     }
 
-    fn get_ray(&self, i: i32, j: f32) -> Ray {
+    fn get_ray(&self, i: i32, j: Float) -> Ray {
         let pixel_center =
-            self.pixel00_loc + (i as f32 * self.pixel_delta_u) + (j as f32 * self.pixel_delta_v);
+            self.pixel00_loc + (i as Float * self.pixel_delta_u) + (j as Float * self.pixel_delta_v);
         let pixel_sample = pixel_center + self.pixel_sample_square();
 
         let ray_origin = if self.defocus_angle <= 0.0 {
@@ -181,8 +182,8 @@ impl Camera {
     }
 
     fn pixel_sample_square(&self) -> Vec3 {
-        let px: f32 = -0.5 + random::<f32>();
-        let py: f32 = -0.5 + random::<f32>();
+        let px: Float = -0.5 + random::<Float>();
+        let py: Float = -0.5 + random::<Float>();
 
         return (px * self.pixel_delta_u) + (py * self.pixel_delta_v);
     }

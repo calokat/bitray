@@ -1,7 +1,7 @@
-use glam::{Vec2, Vec3};
+use crate::{Vec2, Vec3};
 use std::fmt::{Debug, Write};
 use rand::random;
-use crate::{aabb::AABB, hittable::{HitRecord, Hittable}, interval::Interval, materials::material::Material, ray::Ray};
+use crate::{Float, aabb::AABB, hittable::{HitRecord, Hittable}, interval::Interval, materials::material::Material, ray::Ray};
 
 pub struct Quad<'a> {
     q: Vec3,
@@ -10,8 +10,8 @@ pub struct Quad<'a> {
     normal: Vec3,
     w: Vec3,
     aabb: AABB,
-    d: f32,
-    area: f32,
+    d: Float,
+    area: Float,
     material: &'a dyn Material,
     name: String,
 }
@@ -39,7 +39,7 @@ impl<'a> Quad<'a> {
         AABB::from_extrema(q, q + u + v).to_contain(&AABB::from_extrema(q + u, q + v))
     }
 
-    fn is_interior(&self, alpha: f32, beta: f32) -> Option<Vec2> {
+    fn is_interior(&self, alpha: Float, beta: Float) -> Option<Vec2> {
         let unit_interval = Interval::new(0.0, 1.0);
 
         if !unit_interval.contains(alpha) || !unit_interval.contains(beta) {
@@ -84,8 +84,8 @@ impl<'a> Hittable for Quad<'a> {
         &self.name
     }
 
-    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f32 {
-        if let Some(hr) = self.hit(&Ray::new(*origin, *direction), Interval::new(0.0001, f32::MAX)) {
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {
+        if let Some(hr) = self.hit(&Ray::new(*origin, *direction), Interval::new(0.0001, Float::MAX)) {
             let distance_squared = hr.t * hr.t * direction.length_squared();
             let cosine = direction.dot(hr.normal).abs() / direction.length();
 
@@ -96,7 +96,7 @@ impl<'a> Hittable for Quad<'a> {
     }
 
     fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {
-        let p = self.q + self.u * random::<f32>() + self.v * random::<f32>();
+        let p = self.q + self.u * random::<Float>() + self.v * random::<Float>();
         return p - *origin;
     }
 }

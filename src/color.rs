@@ -1,21 +1,21 @@
-use glam::Vec3;
+use crate::Vec3;
 use std::ops::{Add, AddAssign, Div, Mul};
-
+use crate::Float;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Color(Vec3);
 
 impl Color {
-    pub fn new(r: f32, g: f32, b: f32) -> Color {
+    pub fn new(r: Float, g: Float, b: Float) -> Color {
         Color(Vec3 { x: r, y: g, z: b })
     }
 
-    fn to_output_value(f: f32, num_samples: i32) -> u8 {
-        let scale = f32::clamp(1.0 / num_samples as f32, 0.0, 0.999);
+    fn to_output_value(f: Float, num_samples: i32) -> u8 {
+        let scale = Float::clamp(1.0 / num_samples as Float, 0.0, 0.999);
         let corrected = Self::linear_to_gamma(f * scale);
         return (255.999 * corrected) as u8;
     }
 
-    fn linear_to_gamma(linear: f32) -> f32 {
+    fn linear_to_gamma(linear: Float) -> Float {
         linear.sqrt()
     }
 
@@ -40,9 +40,9 @@ impl Color {
     }
 }
 
-impl Mul<f32> for Color {
+impl Mul<Float> for Color {
     type Output = Color;
-    fn mul(self, rhs: f32) -> Self::Output {
+    fn mul(self, rhs: Float) -> Self::Output {
         return Color(self.0 * rhs);
     }
 }
@@ -67,9 +67,9 @@ impl AddAssign for Color {
     }
 }
 
-impl Div<f32> for Color {
+impl Div<Float> for Color {
     type Output = Color;
-    fn div(self, rhs: f32) -> Self::Output {
+    fn div(self, rhs: Float) -> Self::Output {
         Self(self.0 / rhs)
     }
 }
