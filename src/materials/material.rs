@@ -9,11 +9,11 @@ pub struct MaterialHitResult {
     pub pdf: Option<Box<dyn PDF>>,
 }
 pub trait Material: Send + Sync {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<MaterialHitResult> {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<MaterialHitResult> {
         None
     }
     fn emit_color(&self, _: &Ray, _: &HitRecord) -> Color {
         return Color::new(0.0, 0.0, 0.0);
     }
-    fn scattering_pdf(&self, r_in: &Ray, hit_record: &HitRecord, scattered_ray: &Ray) -> Float {0.0}
+    fn scattering_pdf(&self, _r_in: &Ray, _hit_record: &HitRecord, _scattered_ray: &Ray) -> Float {0.0}
 }

@@ -52,8 +52,8 @@ pub trait Hittable: Send + Sync + Debug {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
     fn bounding_box(&self) -> AABB;
     fn get_name(&self) -> &String;
-    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {1.0}
-    fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {Vec3::X}
+    fn pdf_value(&self, _origin: &Vec3, _direction: &Vec3) -> Float {1.0}
+    fn random_vector_to_surface(&self, _origin: &Vec3) -> Vec3 {Vec3::X}
 }
 
 pub struct HittableList<'a> {
