@@ -1,6 +1,6 @@
+use crate::Float;
 use crate::Vec3;
 use std::ops::{Add, AddAssign, Div, Mul};
-use crate::Float;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Color(Vec3);
 

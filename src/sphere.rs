@@ -1,7 +1,7 @@
 use rand::random;
 
 use crate::onb::ONB;
-use crate::{ Float, Vec2, Vec3, PI};
+use crate::{Float, Vec2, Vec3, PI};
 use std::fmt::{Debug, Write};
 
 use crate::hittable::{HitRecord, Hittable};
@@ -38,11 +38,11 @@ impl<'a> Sphere<'a> {
     fn random_to_sphere(radius: Float, distance_squared: Float) -> Vec3 {
         let r1 = random::<Float>();
         let r2 = random::<Float>();
-        let z = 1.0 + r2*(Float::sqrt(1.0-radius*radius/distance_squared) - 1.0);
+        let z = 1.0 + r2 * (Float::sqrt(1.0 - radius * radius / distance_squared) - 1.0);
 
-        let phi = 2.0*crate::PI*r1;
-        let x = Float::cos(phi) * Float::sqrt(1.0-z*z);
-        let y = Float::sin(phi) * Float::sqrt(1.0-z*z);
+        let phi = 2.0 * crate::PI * r1;
+        let x = Float::cos(phi) * Float::sqrt(1.0 - z * z);
+        let y = Float::sin(phi) * Float::sqrt(1.0 - z * z);
 
         return Vec3::new(x, y, z);
     }
@@ -87,7 +87,10 @@ impl<'a> Hittable for Sphere<'a> {
     }
 
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {
-        if let Some(_) = self.hit(&Ray::new(*origin, *direction), Interval::new(0.0001, Float::MAX)) {
+        if let Some(_) = self.hit(
+            &Ray::new(*origin, *direction),
+            Interval::new(0.0001, Float::MAX),
+        ) {
             let dist_squared = (self.center - *origin).length_squared();
             let cos_theta_max = Float::sqrt(1.0 - self.radius * self.radius / dist_squared);
             let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);

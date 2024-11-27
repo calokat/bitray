@@ -1,10 +1,10 @@
-use crate::{aabb::AABB, Vec3};
 use crate::interval::Interval;
 use crate::materials::material::Material;
 use crate::ray::Ray;
 use crate::Float;
-use core::fmt::Debug;
 use crate::Vec2;
+use crate::{aabb::AABB, Vec3};
+use core::fmt::Debug;
 use std::vec::Vec;
 
 pub struct HitRecord<'a> {
@@ -52,8 +52,12 @@ pub trait Hittable: Send + Sync + Debug {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
     fn bounding_box(&self) -> AABB;
     fn get_name(&self) -> &String;
-    fn pdf_value(&self, _origin: &Vec3, _direction: &Vec3) -> Float {1.0}
-    fn random_vector_to_surface(&self, _origin: &Vec3) -> Vec3 {Vec3::X}
+    fn pdf_value(&self, _origin: &Vec3, _direction: &Vec3) -> Float {
+        1.0
+    }
+    fn random_vector_to_surface(&self, _origin: &Vec3) -> Vec3 {
+        Vec3::X
+    }
 }
 
 pub struct HittableList<'a> {
@@ -106,14 +110,18 @@ impl<'a> Hittable for HittableList<'a> {
     }
 
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {
-        self.objects.iter().fold(0.0, |acc, o| {
-            acc + o.pdf_value(origin, direction)
-        }) / self.objects.len() as Float
+        self.objects
+            .iter()
+            .fold(0.0, |acc, o| acc + o.pdf_value(origin, direction))
+            / self.objects.len() as Float
     }
 
     fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {
         let random_index = (rand::random::<Float>() * self.objects.len() as Float).floor();
-        let picked = self.objects.get(random_index as usize).expect("Random index out of bounds");
+        let picked = self
+            .objects
+            .get(random_index as usize)
+            .expect("Random index out of bounds");
         picked.random_vector_to_surface(origin)
     }
 }

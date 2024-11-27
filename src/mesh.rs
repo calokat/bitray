@@ -68,8 +68,16 @@ impl MeshOptions {
         }
 
         let russimp_aabb = scene.meshes[0].aabb;
-        let aabb_min = Vec3::new(russimp_aabb.min.x as Float, russimp_aabb.min.y as Float, russimp_aabb.min.z as Float);
-        let aabb_max = Vec3::new(russimp_aabb.max.x as Float, russimp_aabb.max.y as Float, russimp_aabb.max.z as Float);
+        let aabb_min = Vec3::new(
+            russimp_aabb.min.x as Float,
+            russimp_aabb.min.y as Float,
+            russimp_aabb.min.z as Float,
+        );
+        let aabb_max = Vec3::new(
+            russimp_aabb.max.x as Float,
+            russimp_aabb.max.y as Float,
+            russimp_aabb.max.z as Float,
+        );
 
         Self {
             triangles,

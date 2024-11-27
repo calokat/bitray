@@ -76,8 +76,14 @@ impl Camera {
                     .map(|(j, i)| {
                         let mut color = Color::new(0.0, 0.0, 0.0);
                         for _ in 0..self.num_samples {
-                            color +=
-                                self.ray_color(&self.get_ray(*i, *j as Float), world, important_objs, self.max_depth).clamp();
+                            color += self
+                                .ray_color(
+                                    &self.get_ray(*i, *j as Float),
+                                    world,
+                                    important_objs,
+                                    self.max_depth,
+                                )
+                                .clamp();
                         }
                         color.correct_nans();
                         color
@@ -110,7 +116,8 @@ impl Camera {
         let theta = self.vertical_fov.to_radians();
         let h = Float::tan(theta / 2.0);
         let viewport_height = 2.0 * h * self.focus_distance;
-        let viewport_width = viewport_height * (self.image_width as Float / self.image_height as Float);
+        let viewport_width =
+            viewport_height * (self.image_width as Float / self.image_height as Float);
 
         self.w = (self.look_from - self.look_at).normalize();
         self.u = self.up.cross(self.w).normalize();
@@ -134,7 +141,13 @@ impl Camera {
         self.defocus_disk_v = self.v * defocus_radius;
     }
 
-    fn ray_color(&self, ray: &Ray, world: &dyn Hittable, important_objs: &dyn Hittable, depth: i32) -> Color {
+    fn ray_color(
+        &self,
+        ray: &Ray,
+        world: &dyn Hittable,
+        important_objs: &dyn Hittable,
+        depth: i32,
+    ) -> Color {
         if depth <= 0 {
             return Color::new(1.0, 1.0, 1.0);
         }
@@ -147,7 +160,8 @@ impl Camera {
         ) {
             if let Some(mat_hit_res) = rec.material.scatter(ray, &rec) {
                 if mat_hit_res.pdf.is_none() {
-                    return mat_hit_res.color * self.ray_color(&mat_hit_res.ray, world, important_objs, depth - 1);
+                    return mat_hit_res.color
+                        * self.ray_color(&mat_hit_res.ray, world, important_objs, depth - 1);
                 }
                 let mat_pdf = mat_hit_res.pdf.unwrap();
                 let pdf = HittablePDF::new(rec.p, important_objs);
@@ -157,7 +171,10 @@ impl Camera {
                 let scattering_pdf = rec.material.scattering_pdf(ray, &rec, &scattered);
 
                 // return mat_hit_res.color * self.ray_color(&mat_hit_res.ray, world, important_objs, depth - 1);
-                return mat_hit_res.color * self.ray_color(&scattered, world, important_objs, depth - 1) * scattering_pdf / pdf_value;
+                return mat_hit_res.color
+                    * self.ray_color(&scattered, world, important_objs, depth - 1)
+                    * scattering_pdf
+                    / pdf_value;
             } else {
                 return rec.material.emit_color(ray, &rec);
             }
@@ -167,8 +184,9 @@ impl Camera {
     }
 
     fn get_ray(&self, i: i32, j: Float) -> Ray {
-        let pixel_center =
-            self.pixel00_loc + (i as Float * self.pixel_delta_u) + (j as Float * self.pixel_delta_v);
+        let pixel_center = self.pixel00_loc
+            + (i as Float * self.pixel_delta_u)
+            + (j as Float * self.pixel_delta_v);
         let pixel_sample = pixel_center + self.pixel_sample_square();
 
         let ray_origin = if self.defocus_angle <= 0.0 {

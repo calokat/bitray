@@ -1,7 +1,14 @@
+use crate::{
+    aabb::AABB,
+    hittable::{HitRecord, Hittable},
+    interval::Interval,
+    materials::material::Material,
+    ray::Ray,
+    Float,
+};
 use crate::{Vec2, Vec3};
-use std::fmt::{Debug, Write};
 use rand::random;
-use crate::{Float, aabb::AABB, hittable::{HitRecord, Hittable}, interval::Interval, materials::material::Material, ray::Ray};
+use std::fmt::{Debug, Write};
 
 pub struct Quad<'a> {
     q: Vec3,
@@ -31,7 +38,7 @@ impl<'a> Quad<'a> {
             d: normal.dot(q),
             area: n.length(),
             material,
-            name: "Quad".into()
+            name: "Quad".into(),
         }
     }
 
@@ -51,7 +58,11 @@ impl<'a> Quad<'a> {
 }
 
 impl<'a> Hittable for Quad<'a> {
-    fn hit(&self, r: &crate::ray::Ray, ray_t: crate::interval::Interval) -> Option<crate::hittable::HitRecord> {
+    fn hit(
+        &self,
+        r: &crate::ray::Ray,
+        ray_t: crate::interval::Interval,
+    ) -> Option<crate::hittable::HitRecord> {
         let denom = self.normal.dot(r.direction);
         if denom.abs() < 1.0e-8 {
             return None;
@@ -71,7 +82,14 @@ impl<'a> Hittable for Quad<'a> {
         let beta = self.w.dot(self.u.cross(planar_hit));
 
         if let Some(uv) = self.is_interior(alpha, beta) {
-            return Some(HitRecord::new(intersection, t, self.normal, r, self.material, uv));
+            return Some(HitRecord::new(
+                intersection,
+                t,
+                self.normal,
+                r,
+                self.material,
+                uv,
+            ));
         }
         None
     }
@@ -85,7 +103,10 @@ impl<'a> Hittable for Quad<'a> {
     }
 
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {
-        if let Some(hr) = self.hit(&Ray::new(*origin, *direction), Interval::new(0.0001, Float::MAX)) {
+        if let Some(hr) = self.hit(
+            &Ray::new(*origin, *direction),
+            Interval::new(0.0001, Float::MAX),
+        ) {
             let distance_squared = hr.t * hr.t * direction.length_squared();
             let cosine = direction.dot(hr.normal).abs() / direction.length();
 

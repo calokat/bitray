@@ -41,4 +41,3 @@ pub type Vec2 = glam::DVec2;
 pub type Mat4 = glam::DMat4;
 #[cfg(feature = "f64")]
 pub type Mat3 = glam::DMat3;
-

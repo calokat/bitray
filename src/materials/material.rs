@@ -15,5 +15,7 @@ pub trait Material: Send + Sync {
     fn emit_color(&self, _: &Ray, _: &HitRecord) -> Color {
         return Color::new(0.0, 0.0, 0.0);
     }
-    fn scattering_pdf(&self, _r_in: &Ray, _hit_record: &HitRecord, _scattered_ray: &Ray) -> Float {0.0}
+    fn scattering_pdf(&self, _r_in: &Ray, _hit_record: &HitRecord, _scattered_ray: &Ray) -> Float {
+        0.0
+    }
 }

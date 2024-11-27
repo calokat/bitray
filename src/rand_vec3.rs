@@ -1,6 +1,6 @@
 use crate::Vec3;
-use rand::prelude::*;
 use crate::{Float, PI};
+use rand::prelude::*;
 pub fn random_vec() -> Vec3 {
     Vec3 {
         x: random::<Float>(),

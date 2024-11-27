@@ -1,8 +1,8 @@
 use super::material::{Material, MaterialHitResult};
 use crate::color::Color;
-use crate::Float;
 use crate::rand_vec3::{reflect, refract};
 use crate::ray::Ray;
+use crate::Float;
 pub struct Dielectric {
     index_of_refraction: Float,
 }
@@ -36,7 +36,7 @@ impl Material for Dielectric {
         return Some(MaterialHitResult {
             color: Color::new(1.0, 1.0, 1.0),
             ray: scattered,
-            pdf: None
+            pdf: None,
         });
     }
 }

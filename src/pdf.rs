@@ -10,17 +10,14 @@ pub trait PDF {
 }
 
 pub struct CosinePDF {
-    uvw: ONB
+    uvw: ONB,
 }
 
 impl CosinePDF {
     pub fn new(uvw: ONB) -> Self {
-        Self {
-            uvw
-        }
+        Self { uvw }
     }
 }
-
 
 impl PDF for CosinePDF {
     fn value(&self, direction: &Vec3) -> Float {
@@ -61,9 +58,7 @@ pub struct MixturePDF<'a> {
 
 impl<'a> MixturePDF<'a> {
     pub fn new(a: &'a dyn PDF, b: &'a dyn PDF) -> Self {
-        Self {
-            a, b
-        }
+        Self { a, b }
     }
 }
 

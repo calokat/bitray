@@ -28,7 +28,7 @@ fn main() {
     };
 
     let light_texture = ColorTexture2D {
-        color: Color::new(10.0, 10.0, 10.0)
+        color: Color::new(10.0, 10.0, 10.0),
     };
 
     let mat_green = Lambert::new(&green_texture);
@@ -41,15 +41,50 @@ fn main() {
     let mat_light = DiffuseLightMaterial::new(&light_texture);
 
     {
-        let wall_left = Quad::new(Vec3::new(555.0, 555.0, 0.0), Vec3::Y * -555.0, Vec3::Z * 555.0, &mat_green);
-        let wall_right = Quad::new(Vec3::new(0.0, 0.0, 555.0), -Vec3::Z * 555.0, Vec3::Y * 555.0, &mat_red);
+        let wall_left = Quad::new(
+            Vec3::new(555.0, 555.0, 0.0),
+            Vec3::Y * -555.0,
+            Vec3::Z * 555.0,
+            &mat_green,
+        );
+        let wall_right = Quad::new(
+            Vec3::new(0.0, 0.0, 555.0),
+            -Vec3::Z * 555.0,
+            Vec3::Y * 555.0,
+            &mat_red,
+        );
 
-        let floor = Quad::new(Vec3::new(0.0, 0.0, 0.0), Vec3::Z * 555.0, Vec3::X * 555.0, &mat_lambert);
-        let wall_back = Quad::new(Vec3::new(555.0, 0.0, 555.0), Vec3::X * -555.0, Vec3::Y * 555.0, &mat_lambert);
-        let ceiling = Quad::new(Vec3::new(0.0, 555.0, 0.0), Vec3::X * 555.0, Vec3::Z * 555.0, &mat_lambert);
-        let light = Quad::new(Vec3::new(213.0,554.0,227.0), Vec3::Z * 105.0, Vec3::X * 130.0, &mat_light);
+        let floor = Quad::new(
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::Z * 555.0,
+            Vec3::X * 555.0,
+            &mat_lambert,
+        );
+        let wall_back = Quad::new(
+            Vec3::new(555.0, 0.0, 555.0),
+            Vec3::X * -555.0,
+            Vec3::Y * 555.0,
+            &mat_lambert,
+        );
+        let ceiling = Quad::new(
+            Vec3::new(0.0, 555.0, 0.0),
+            Vec3::X * 555.0,
+            Vec3::Z * 555.0,
+            &mat_lambert,
+        );
+        let light = Quad::new(
+            Vec3::new(213.0, 554.0, 227.0),
+            Vec3::Z * 105.0,
+            Vec3::X * 130.0,
+            &mat_light,
+        );
 
-        let sphere = Sphere::new(Vec3::new(275.0f32, 50.0f32, 275.0f32), 50.0f32, &mat_metal, "Red Sphere".into());
+        let sphere = Sphere::new(
+            Vec3::new(275.0f32, 50.0f32, 275.0f32),
+            50.0f32,
+            &mat_metal,
+            "Red Sphere".into(),
+        );
 
         let objects: Vec<&dyn Hittable> = vec![
             &light,
@@ -74,9 +109,7 @@ fn main() {
             Color::new(0.0, 0.0, 0.0),
         );
 
-        let importants: HittableList = HittableList::new(vec![
-            &light,
-        ]);
+        let importants: HittableList = HittableList::new(vec![&light]);
 
         camera.render(&world, &importants);
     }
