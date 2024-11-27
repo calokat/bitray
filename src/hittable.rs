@@ -112,7 +112,9 @@ impl<'a> Hittable for HittableList<'a> {
     }
 
     fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {
-        self.objects.iter().fold(Vec3::ZERO, |acc, h| acc + h.random_vector_to_surface(origin)) / self.objects.len() as Float
+        let random_index = (rand::random::<Float>() * self.objects.len() as Float).floor();
+        let picked = self.objects.get(random_index as usize).expect("Random index out of bounds");
+        picked.random_vector_to_surface(origin)
     }
 }
 
