@@ -77,7 +77,7 @@ impl Camera {
                         let mut color = Color::new(0.0, 0.0, 0.0);
                         for _ in 0..self.num_samples {
                             color +=
-                                self.ray_color(&self.get_ray(*i, *j as Float), world, important_objs, self.max_depth);
+                                self.ray_color(&self.get_ray(*i, *j as Float), world, important_objs, self.max_depth).clamp();
                         }
                         color.correct_nans();
                         color

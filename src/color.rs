@@ -38,6 +38,10 @@ impl Color {
             self.0.z = 0.0;
         }
     }
+
+    pub fn clamp(&self) -> Self {
+        Color(self.0.clamp(Vec3::ZERO, Vec3::ONE))
+    }
 }
 
 impl Mul<Float> for Color {
