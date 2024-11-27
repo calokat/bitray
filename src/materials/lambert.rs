@@ -1,37 +1,43 @@
 use super::material::{Material, MaterialHitResult};
-use crate::color::Color;
+use crate::onb::ONB;
+use crate::pdf::{CosinePDF, PDF};
 use crate::ray::Ray;
-use glam::Vec3;
-pub struct Lambert {
-    albedo: Color,
+use crate::texture::Sampler2D;
+use crate::{Float, PI};
+pub struct Lambert<'a> {
+    albedo: &'a dyn Sampler2D,
 }
 
-impl Material for Lambert {
+impl<'a> Material for Lambert<'a> {
     fn scatter(
         &self,
         _r_in: &Ray,
         rec: &crate::hittable::HitRecord,
     ) -> Option<super::material::MaterialHitResult> {
-        if !rec.front_face {
-            return None;
-        }
-        let scatter_direction = rec.normal + crate::rand_vec3::random_unit_vector();
-        let scattered_ray = Ray::new(rec.p, scatter_direction);
-        if scatter_direction.abs().abs_diff_eq(Vec3::ZERO, 0.001) {
-            return Some(MaterialHitResult {
-                color: self.albedo,
-                ray: scattered_ray,
-            });
-        }
+        let pdf = Box::new(CosinePDF::new(ONB::new(&rec.normal)));
         return Some(MaterialHitResult {
-            color: self.albedo,
-            ray: scattered_ray,
+            color: self.albedo.sample(rec.uv),
+            ray: Ray::new(rec.p, pdf.generate()),
+            pdf: Some(pdf),
         });
+    }
+
+    fn scattering_pdf(
+        &self,
+        _r_in: &Ray,
+        hit_record: &crate::hittable::HitRecord,
+        scattered_ray: &Ray,
+    ) -> Float {
+        let cos_theta = hit_record
+            .normal
+            .normalize()
+            .dot(scattered_ray.direction.normalize());
+        (0.0 as Float).max(cos_theta / PI)
     }
 }
 
-impl Lambert {
-    pub fn new(color: Color) -> Self {
+impl<'a> Lambert<'a> {
+    pub fn new(color: &'a dyn Sampler2D) -> Self {
         Self { albedo: color }
     }
 }

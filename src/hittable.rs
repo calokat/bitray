@@ -1,26 +1,29 @@
-use crate::aabb::AABB;
 use crate::interval::Interval;
 use crate::materials::material::Material;
 use crate::ray::Ray;
+use crate::Float;
+use crate::Vec2;
+use crate::{aabb::AABB, Vec3};
 use core::fmt::Debug;
-use glam::Vec3;
 use std::vec::Vec;
 
 pub struct HitRecord<'a> {
     pub p: Vec3,
     pub normal: Vec3,
-    pub t: f32,
+    pub t: Float,
     pub front_face: bool,
     pub material: &'a dyn Material,
+    pub uv: Vec2,
 }
 
 impl<'a> HitRecord<'a> {
     pub fn new(
         p: Vec3,
-        t: f32,
-        outward_normal: &Vec3,
+        t: Float,
+        outward_normal: Vec3,
         r: &Ray,
         material: &'a dyn Material,
+        uv: Vec2,
     ) -> Self {
         let mut this = Self {
             p,
@@ -28,9 +31,10 @@ impl<'a> HitRecord<'a> {
             t,
             front_face: false,
             material,
+            uv,
         };
 
-        this.set_face_normal(r, outward_normal);
+        this.set_face_normal(r, &outward_normal);
 
         return this;
     }
@@ -48,6 +52,12 @@ pub trait Hittable: Send + Sync + Debug {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
     fn bounding_box(&self) -> AABB;
     fn get_name(&self) -> &String;
+    fn pdf_value(&self, _origin: &Vec3, _direction: &Vec3) -> Float {
+        1.0
+    }
+    fn random_vector_to_surface(&self, _origin: &Vec3) -> Vec3 {
+        Vec3::X
+    }
 }
 
 pub struct HittableList<'a> {
@@ -97,6 +107,22 @@ impl<'a> Hittable for HittableList<'a> {
 
     fn get_name(&self) -> &String {
         return &self.name;
+    }
+
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {
+        self.objects
+            .iter()
+            .fold(0.0, |acc, o| acc + o.pdf_value(origin, direction))
+            / self.objects.len() as Float
+    }
+
+    fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {
+        let random_index = (rand::random::<Float>() * self.objects.len() as Float).floor();
+        let picked = self
+            .objects
+            .get(random_index as usize)
+            .expect("Random index out of bounds");
+        picked.random_vector_to_surface(origin)
     }
 }
 

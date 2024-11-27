@@ -1,19 +1,19 @@
-use glam::Vec3;
+use crate::Vec3;
+use crate::{Float, PI};
 use rand::prelude::*;
-
 pub fn random_vec() -> Vec3 {
     Vec3 {
-        x: random::<f32>(),
-        y: random::<f32>(),
-        z: random::<f32>(),
+        x: random::<Float>(),
+        y: random::<Float>(),
+        z: random::<Float>(),
     }
 }
 
-pub fn random_vec_range(min: f32, max: f32) -> Vec3 {
+pub fn random_vec_range(min: Float, max: Float) -> Vec3 {
     Vec3 {
-        x: min + (max - min) * random::<f32>(),
-        y: min + (max - min) * random::<f32>(),
-        z: min + (max - min) * random::<f32>(),
+        x: min + (max - min) * random::<Float>(),
+        y: min + (max - min) * random::<Float>(),
+        z: min + (max - min) * random::<Float>(),
     }
 }
 
@@ -43,10 +43,10 @@ pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     return *v - 2.0 * v.dot(*n) * *n;
 }
 
-pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
-    let cos_theta = f32::min(Vec3::dot(-*uv, *n), 1.0);
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: Float) -> Vec3 {
+    let cos_theta = Float::min(Vec3::dot(-*uv, *n), 1.0);
     let r_out_perp = etai_over_etat * (*uv + cos_theta * *n);
-    let r_out_parallel = -f32::sqrt(f32::abs(1.0 - r_out_perp.length_squared())) * *n;
+    let r_out_parallel = -Float::sqrt(Float::abs(1.0 - r_out_perp.length_squared())) * *n;
     return r_out_perp + r_out_parallel;
 }
 
@@ -56,4 +56,15 @@ pub fn random_vec_unit_disk() -> Vec3 {
         y: random(),
         z: 0.0,
     }
+}
+
+pub fn random_cosine_direction() -> Vec3 {
+    let r1 = random::<Float>();
+    let r2 = random::<Float>();
+
+    let phi = 2.0 * PI * r1;
+    let x = Float::cos(phi) * Float::sqrt(r2);
+    let y = Float::sin(phi) * Float::sqrt(r2);
+    let z = Float::sqrt(1.0 - r2);
+    Vec3::new(x, y, z)
 }

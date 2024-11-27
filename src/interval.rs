@@ -1,28 +1,30 @@
+use crate::Float;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Interval {
-    pub min: f32,
-    pub max: f32,
+    pub min: Float,
+    pub max: Float,
 }
 
 impl Default for Interval {
     fn default() -> Self {
         return Self {
-            min: f32::MAX,
-            max: f32::MIN,
+            min: Float::MAX,
+            max: Float::MIN,
         };
     }
 }
 
 impl Interval {
-    pub fn new(min: f32, max: f32) -> Self {
+    pub fn new(min: Float, max: Float) -> Self {
         Self { min, max }
     }
 
-    pub fn contains(&self, n: f32) -> bool {
+    pub fn contains(&self, n: Float) -> bool {
         return self.min <= n && n <= self.max;
     }
 
-    pub fn surrounds(&self, n: f32) -> bool {
+    pub fn surrounds(&self, n: Float) -> bool {
         return self.min < n && n < self.max;
     }
 
@@ -31,35 +33,35 @@ impl Interval {
     }
 
     pub fn universe() -> Self {
-        Self::new(f32::MIN, f32::MAX)
+        Self::new(Float::MIN, Float::MAX)
     }
 
     pub fn overlaps(&self, other: &Self) -> bool {
-        let t_min = f32::max(self.min, other.min);
-        let t_max = f32::min(self.max, other.max);
+        let t_min = Float::max(self.min, other.min);
+        let t_max = Float::min(self.max, other.max);
         return t_min < t_max;
     }
 
     pub fn to_contain(&self, other: &Self) -> Self {
         Self {
-            min: f32::min(self.min, other.min),
-            max: f32::max(self.max, other.max),
+            min: Float::min(self.min, other.min),
+            max: Float::max(self.max, other.max),
         }
     }
 
-    pub fn clamp_min(&mut self, clamp: f32) {
-        self.min = f32::max(self.min, clamp);
+    pub fn clamp_min(&mut self, clamp: Float) {
+        self.min = Float::max(self.min, clamp);
     }
 
-    pub fn clamp_max(&mut self, clamp: f32) {
-        self.max = f32::min(self.max, clamp);
+    pub fn clamp_max(&mut self, clamp: Float) {
+        self.max = Float::min(self.max, clamp);
     }
 
-    pub fn stretch_min(&mut self, stretch: f32) {
-        self.min = f32::min(self.min, stretch);
+    pub fn stretch_min(&mut self, stretch: Float) {
+        self.min = Float::min(self.min, stretch);
     }
 
-    pub fn stretch_max(&mut self, stretch: f32) {
-        self.max = f32::max(self.max, stretch);
+    pub fn stretch_max(&mut self, stretch: Float) {
+        self.max = Float::max(self.max, stretch);
     }
 }

@@ -1,17 +1,18 @@
 use crate::{
-    color::Color,
     rand_vec3::{random_unit_vector, reflect},
     ray::Ray,
+    texture::Sampler2D,
+    Float,
 };
 
 use super::material::{Material, MaterialHitResult};
 
-pub struct Metal {
-    albedo: Color,
-    fuzz: f32,
+pub struct Metal<'a> {
+    albedo: &'a dyn Sampler2D,
+    fuzz: Float,
 }
 
-impl Material for Metal {
+impl<'a> Material for Metal<'a> {
     fn scatter(
         &self,
         r_in: &Ray,
@@ -23,17 +24,15 @@ impl Material for Metal {
             return None;
         }
         return Some(MaterialHitResult {
-            color: self.albedo,
+            color: self.albedo.sample(rec.uv),
             ray: scattered,
+            pdf: None,
         });
     }
 }
 
-impl Metal {
-    pub fn new(color: Color, fuzz: f32) -> Self {
-        return Self {
-            albedo: color,
-            fuzz,
-        };
+impl<'a> Metal<'a> {
+    pub fn new(albedo: &'a dyn Sampler2D, fuzz: Float) -> Self {
+        return Self { albedo, fuzz };
     }
 }

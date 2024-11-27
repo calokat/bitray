@@ -1,78 +1,116 @@
-use bitray::bvh::BVH;
 use bitray::camera::Camera;
 use bitray::color::Color;
 use bitray::hittable::Hittable;
-use bitray::materials::dielectric::Dielectric;
+use bitray::hittable::HittableList;
+use bitray::materials::diffuse_light::DiffuseLightMaterial;
 use bitray::materials::lambert::Lambert;
 use bitray::materials::metal::Metal;
-use bitray::mesh::Mesh;
-use bitray::mesh::MeshOptions;
+use bitray::quad::Quad;
 use bitray::sphere::Sphere;
-use glam::Mat4;
-use glam::Vec3;
+use bitray::texture::ColorTexture2D;
+use bitray::Vec3;
+
 fn main() {
-    let mat_ground = Lambert::new(Color::new(0.8, 0.8, 0.0));
-    let mat_red = Lambert::new(Color::new(0.7, 0.3, 0.3));
-    let mat_metal = Metal::new(Color::new(1.0, 1.0, 1.0), 0.0);
-    let mat_metal_2 = Metal::new(Color::new(0.8, 0.8, 0.9), 0.1);
-    let mat_glass = Dielectric::new(1.5);
-    let mesh_options = MeshOptions::from_file("box.obj".into());
+    let grey_texture = ColorTexture2D {
+        color: Color::new(1.0, 1.0, 1.0),
+    };
+
+    let green_texture = ColorTexture2D {
+        color: Color::new(0.12, 0.45, 0.15),
+    };
+
+    let blue_texture = ColorTexture2D {
+        color: Color::new(0.3, 0.3, 0.8),
+    };
+
+    let red_texture = ColorTexture2D {
+        color: Color::new(1.0, 0.0, 0.0),
+    };
+
+    let light_texture = ColorTexture2D {
+        color: Color::new(10.0, 10.0, 10.0),
+    };
+
+    let mat_green = Lambert::new(&green_texture);
+
+    let mat_red = Lambert::new(&red_texture);
+
+    let mat_lambert = Lambert::new(&grey_texture);
+    let mat_metal = Metal::new(&blue_texture, 0.0);
+
+    let mat_light = DiffuseLightMaterial::new(&light_texture);
+
     {
-        let green_sphere = Sphere::new(
-            Vec3::new(0.0, -100.5, -1.0),
-            100.0,
-            &mat_ground,
-            "Green Sphere".into(),
+        let wall_left = Quad::new(
+            Vec3::new(555.0, 555.0, 0.0),
+            Vec3::Y * -555.0,
+            Vec3::Z * 555.0,
+            &mat_green,
         );
-        let metal_sphere = Sphere::new(
-            Vec3::new(1.0, 0.0, -1.0),
-            0.5,
-            &mat_metal,
-            "Metal Sphere".into(),
-        );
-        let glass_sphere = Sphere::new(
-            Vec3::new(-1.0, 0.0, -1.0),
-            0.5,
-            &mat_glass,
-            "Glass Sphere".into(),
-        );
-        let red_sphere = Sphere::new(
-            Vec3::new(0.0, 0.0, -1.0),
-            0.5,
+        let wall_right = Quad::new(
+            Vec3::new(0.0, 0.0, 555.0),
+            -Vec3::Z * 555.0,
+            Vec3::Y * 555.0,
             &mat_red,
+        );
+
+        let floor = Quad::new(
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::Z * 555.0,
+            Vec3::X * 555.0,
+            &mat_lambert,
+        );
+        let wall_back = Quad::new(
+            Vec3::new(555.0, 0.0, 555.0),
+            Vec3::X * -555.0,
+            Vec3::Y * 555.0,
+            &mat_lambert,
+        );
+        let ceiling = Quad::new(
+            Vec3::new(0.0, 555.0, 0.0),
+            Vec3::X * 555.0,
+            Vec3::Z * 555.0,
+            &mat_lambert,
+        );
+        let light = Quad::new(
+            Vec3::new(213.0, 554.0, 227.0),
+            Vec3::Z * 105.0,
+            Vec3::X * 130.0,
+            &mat_light,
+        );
+
+        let sphere = Sphere::new(
+            Vec3::new(275.0f32, 50.0f32, 275.0f32),
+            50.0f32,
+            &mat_metal,
             "Red Sphere".into(),
         );
-        let mesh = Mesh::new(
-            &mesh_options,
-            &mat_metal_2,
-            "Box".into(),
-            Mat4::from_translation(Vec3::new(0.0, 2.0, -5.0))
-                * Mat4::from_euler(
-                    glam::EulerRot::XYZ,
-                    90.0f32.to_radians(),
-                    45.0f32.to_radians(),
-                    0.0f32.to_radians(),
-                ),
-        );
+
         let objects: Vec<&dyn Hittable> = vec![
-            &red_sphere,
-            &glass_sphere,
-            &metal_sphere,
-            &mesh,
-            &green_sphere,
+            &light,
+            &floor,
+            &wall_left,
+            &wall_right,
+            &floor,
+            &wall_back,
+            &ceiling,
+            &sphere,
         ];
-        let world = BVH::new(objects);
+        let world: HittableList = HittableList::new(objects);
         // let world = HittableList::new(objects);
         let camera = Camera::new(
             16.0 / 9.0,
-            600,
-            100,
+            1920,
+            1500,
             20,
-            Vec3::new(0.0, 0.0, 15.0),
-            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(278.0, 278.0, -800.0),
+            Vec3::new(278.0, 278.0, 0.0),
             Vec3::Y,
+            Color::new(0.0, 0.0, 0.0),
         );
 
-        camera.render(&world);
+        let importants: HittableList = HittableList::new(vec![&light]);
+
+        camera.render(&world, &importants);
     }
 }
