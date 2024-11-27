@@ -1,4 +1,7 @@
-use crate::{Float, PI, Vec2, Vec3};
+use rand::random;
+
+use crate::onb::ONB;
+use crate::{ Float, Vec2, Vec3, PI};
 use std::fmt::{Debug, Write};
 
 use crate::hittable::{HitRecord, Hittable};
@@ -31,6 +34,18 @@ impl<'a> Sphere<'a> {
         let v = theta / PI;
         Vec2::new(u, v)
     }
+
+    fn random_to_sphere(radius: Float, distance_squared: Float) -> Vec3 {
+        let r1 = random::<Float>();
+        let r2 = random::<Float>();
+        let z = 1.0 + r2*(Float::sqrt(1.0-radius*radius/distance_squared) - 1.0);
+
+        let phi = 2.0*crate::PI*r1;
+        let x = Float::cos(phi) * Float::sqrt(1.0-z*z);
+        let y = Float::sin(phi) * Float::sqrt(1.0-z*z);
+
+        return Vec3::new(x, y, z);
+    }
 }
 
 impl<'a> Hittable for Sphere<'a> {
@@ -55,7 +70,7 @@ impl<'a> Hittable for Sphere<'a> {
         }
         let p = r.at(root);
         let outward_normal = (p - self.center) / self.radius;
-        let uv = Self::get_uv(p);
+        let uv = Self::get_uv((p - self.center) / self.radius);
         let rec: HitRecord = HitRecord::new(p, root, outward_normal, r, self.material, uv);
         return Some(rec);
     }
@@ -81,6 +96,13 @@ impl<'a> Hittable for Sphere<'a> {
         }
 
         0.0
+    }
+
+    fn random_vector_to_surface(&self, origin: &Vec3) -> Vec3 {
+        let direction = self.center - *origin;
+        let distance_squared = direction.length_squared();
+        let uvw = ONB::new(&direction);
+        uvw.transform(&Self::random_to_sphere(self.radius, distance_squared))
     }
 }
 
