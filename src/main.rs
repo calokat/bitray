@@ -119,11 +119,11 @@ fn main() {
 
         let importants = &light;
 
-        let render_fn = renderers::rayon::render;
+        let render_fn = renderers::wgpu::render;
 
         let scene_render = render_fn(&camera, &world, importants, render_params);
 
-        image_writer::write_image(&scene_render, (1920, 1080), 1500)
-            .expect("Image should be writable");
+        // image_writer::write_image(&scene_render, (1920, 1080), 1500)
+        //     .expect("Image should be writable");
     }
 }
