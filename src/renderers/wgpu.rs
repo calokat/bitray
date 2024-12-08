@@ -5,10 +5,7 @@ use rand::random;
 use util::{DeviceExt, TextureDataOrder};
 use wgpu::*;
 
-use crate::{
-    camera::Camera, hittable::Hittable, rand_vec3::random_vec_unit_disk,
-    render_parameters::RenderParameters, Float, Vec2,
-};
+use crate::{camera::Camera, hittable::Hittable, render_parameters::RenderParameters, Float, Vec2};
 
 pub fn render(
     camera: &Camera,
@@ -123,6 +120,14 @@ async fn render_async(
         bytemuck::cast_slice(&ray_vec.as_slice()),
     );
 
+    let sphere_array: [Float; 4] = [0.0, 0.0, 50.0, 25.0];
+
+    let sphere_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
+        label: None,
+        contents: bytemuck::cast_slice(&sphere_array),
+        usage: BufferUsages::UNIFORM,
+    });
+
     let ray_color_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: Some("ray color"),
         source: ShaderSource::Wgsl(include_str!("ray_color.wgsl").into()),
@@ -148,6 +153,16 @@ async fn render_async(
                     access: StorageTextureAccess::ReadOnly,
                     format: TextureFormat::Rgba32Float,
                     view_dimension: TextureViewDimension::D2,
+                },
+                count: None,
+            },
+            BindGroupLayoutEntry {
+                binding: 2,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
                 },
                 count: None,
             },
@@ -187,6 +202,14 @@ async fn render_async(
                         array_layer_count: None,
                     },
                 )),
+            },
+            BindGroupEntry {
+                binding: 2,
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: &sphere_buffer,
+                    size: None,
+                    offset: 0,
+                }),
             },
         ],
     });
@@ -302,7 +325,7 @@ fn pixel_sample_square(camera: &Camera) -> crate::Vec3 {
     let px: Float = -0.5 + random::<Float>();
     let py: Float = -0.5 + random::<Float>();
 
-    return (camera.pixel_delta_u) + (camera.pixel_delta_v);
+    return (camera.pixel_delta_u * px) + (camera.pixel_delta_v * py);
 }
 
 fn defocus_disk_sample(camera: &Camera) -> crate::Vec3 {

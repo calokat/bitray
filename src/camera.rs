@@ -79,7 +79,5 @@ impl Camera {
             self.focus_distance * Float::tan((self.defocus_angle / 2.0).to_radians());
         self.defocus_disk_u = self.u * defocus_radius;
         self.defocus_disk_v = self.v * defocus_radius;
-
-        println!("aspect ratio {:?}", self.aspect_ratio);
     }
 }
