@@ -61,9 +61,9 @@ impl<'a> Hittable for Sphere<'a> {
         }
 
         let sqrtd = Float::sqrt(discriminant);
-        let mut root = (-half_b - sqrtd) / a;
+        let root = (-half_b - sqrtd) / a;
         if !ray_t.surrounds(root) {
-            root = (-half_b + sqrtd) / a;
+            let root = (-half_b + sqrtd) / a;
             if !ray_t.surrounds(root) {
                 return None;
             }

@@ -102,8 +102,8 @@ fn main() {
         let world = HittableList::new(objects);
 
         let render_params = RenderParameters {
-            image_width: 256,
-            image_height: 1024,
+            image_width: 1024,
+            image_height: 512,
             num_samples: 1500,
             background_color: Color::new(0.0, 0.0, 0.0),
             max_depth: 20,
