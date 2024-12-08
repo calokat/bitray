@@ -107,7 +107,7 @@ fn ray_color(
     return background_color;
 }
 
-pub fn generate_ray(camera: &Camera, (x, y): (i32, i32)) -> Ray {
+fn generate_ray(camera: &Camera, (x, y): (i32, i32)) -> Ray {
     let pixel_center = camera.pixel00_loc
         + (x as Float * camera.pixel_delta_u)
         + (y as Float * camera.pixel_delta_v);
@@ -122,7 +122,7 @@ pub fn generate_ray(camera: &Camera, (x, y): (i32, i32)) -> Ray {
 
     let ray_direction = pixel_sample - ray_origin;
 
-    return Ray::new(camera.center, ray_direction.normalize());
+    return Ray::new(ray_origin, ray_direction.normalize());
 }
 
 fn pixel_sample_square(camera: &Camera) -> Vec3 {

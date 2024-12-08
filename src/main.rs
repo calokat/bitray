@@ -102,17 +102,16 @@ fn main() {
         let world = HittableList::new(objects);
 
         let render_params = RenderParameters {
-            aspect_ratio: 16.0 / 9.0,
-            image_width: 1920,
-            image_height: 1080,
+            image_width: 256,
+            image_height: 1024,
             num_samples: 1500,
             background_color: Color::new(0.0, 0.0, 0.0),
             max_depth: 20,
         };
 
         let camera = Camera::new(
-            Vec3::new(278.0, 278.0, -800.0),
-            Vec3::new(278.0, 278.0, 0.0),
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.0, 1.0),
             Vec3::Y,
             render_params,
         );
@@ -123,7 +122,11 @@ fn main() {
 
         let scene_render = render_fn(&camera, &world, importants, render_params);
 
-        // image_writer::write_image(&scene_render, (1920, 1080), 1500)
-        //     .expect("Image should be writable");
+        image_writer::write_image(
+            &scene_render,
+            (render_params.image_width, render_params.image_height),
+            1500,
+        )
+        .expect("Image should be writable");
     }
 }

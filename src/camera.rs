@@ -1,4 +1,3 @@
-use crate::color::Color;
 use crate::render_parameters::RenderParameters;
 use crate::Float;
 use crate::Vec3;
@@ -24,23 +23,21 @@ pub struct Camera {
     pub defocus_disk_v: Vec3,
     pub defocus_angle: Float,
     focus_distance: Float,
-    background_color: Color,
 }
 
 impl Camera {
     pub fn new(look_from: Vec3, look_at: Vec3, up: Vec3, render_params: RenderParameters) -> Self {
         let mut cam = Self::default();
-        cam.aspect_ratio = render_params.aspect_ratio;
+        cam.aspect_ratio = render_params.image_width as Float / render_params.image_height as Float;
         cam.image_width = render_params.image_width;
         cam.num_samples = render_params.num_samples;
         cam.max_depth = render_params.max_depth;
-        cam.vertical_fov = 40.0;
+        cam.vertical_fov = 60.0;
         cam.look_from = look_from;
         cam.look_at = look_at;
         cam.up = up;
         cam.defocus_angle = 0.0;
-        cam.focus_distance = 3.46;
-        cam.background_color = render_params.background_color;
+        cam.focus_distance = 1.0;
         cam.initialize();
         cam
     }
@@ -82,5 +79,7 @@ impl Camera {
             self.focus_distance * Float::tan((self.defocus_angle / 2.0).to_radians());
         self.defocus_disk_u = self.u * defocus_radius;
         self.defocus_disk_v = self.v * defocus_radius;
+
+        println!("aspect ratio {:?}", self.aspect_ratio);
     }
 }
