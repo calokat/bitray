@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::mpsc, time::Duration};
 
+use bytemuck::cast_slice;
 use image::{ImageBuffer, Rgba};
 use rand::random;
 use util::{DeviceExt, TextureDataOrder};
@@ -120,12 +121,12 @@ async fn render_async(
         bytemuck::cast_slice(&ray_vec.as_slice()),
     );
 
-    let sphere_array: [Float; 4] = [0.0, 0.0, 50.0, 25.0];
+    let sphere_array: [Float; 8] = [0.0, 0.0, 50.0, 25.0, 5.0, 5.0, 15.0, 5.0];
 
     let sphere_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: None,
         contents: bytemuck::cast_slice(&sphere_array),
-        usage: BufferUsages::UNIFORM,
+        usage: BufferUsages::STORAGE,
     });
 
     let ray_color_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -160,7 +161,7 @@ async fn render_async(
                 binding: 2,
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: BindingType::Buffer {
-                    ty: BufferBindingType::Uniform,
+                    ty: BufferBindingType::Storage { read_only: true },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
@@ -214,9 +215,44 @@ async fn render_async(
         ],
     });
 
+    let entities_array: [u32; 4] = [0, 0, 1, 0];
+
+    let entities_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
+        label: None,
+        contents: cast_slice(&entities_array),
+        usage: BufferUsages::STORAGE,
+    });
+
+    let entities_bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+        label: None,
+        entries: &[BindGroupLayoutEntry {
+            binding: 0,
+            visibility: ShaderStages::COMPUTE,
+            ty: BindingType::Buffer {
+                ty: BufferBindingType::Storage { read_only: true },
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
+            count: None,
+        }],
+    });
+
+    let entities_bind_group = device.create_bind_group(&BindGroupDescriptor {
+        label: None,
+        layout: &entities_bind_group_layout,
+        entries: &[BindGroupEntry {
+            binding: 0,
+            resource: BindingResource::Buffer(BufferBinding {
+                buffer: &entities_buffer,
+                offset: 0,
+                size: None,
+            }),
+        }],
+    });
+
     let compute_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: Some("Render Pipeline Layout"),
-        bind_group_layouts: &[&bind_group_layout],
+        bind_group_layouts: &[&bind_group_layout, &entities_bind_group_layout],
         push_constant_ranges: &[],
     });
 
@@ -244,6 +280,7 @@ async fn render_async(
 
         compute_pass.set_pipeline(&compute_pipeline);
         compute_pass.set_bind_group(0, &bind_group, &[]);
+        compute_pass.set_bind_group(1, &entities_bind_group, &[]);
         compute_pass.dispatch_workgroups(color_texture_size.width, color_texture_size.height, 1);
     }
     encoder.copy_texture_to_buffer(
