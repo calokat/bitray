@@ -123,9 +123,17 @@ async fn render_async(
 
     let sphere_array: [Float; 8] = [0.0, 0.0, 50.0, 25.0, 5.0, 5.0, 15.0, 5.0];
 
+    let quad_array: [Float; 12] = [-2.0, 5.0, 15.0, 1.0, 5.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0];
+
     let sphere_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: None,
         contents: bytemuck::cast_slice(&sphere_array),
+        usage: BufferUsages::STORAGE,
+    });
+
+    let quad_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
+        label: None,
+        contents: bytemuck::cast_slice(&quad_array),
         usage: BufferUsages::STORAGE,
     });
 
@@ -159,6 +167,16 @@ async fn render_async(
             },
             BindGroupLayoutEntry {
                 binding: 2,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            BindGroupLayoutEntry {
+                binding: 3,
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: BindingType::Buffer {
                     ty: BufferBindingType::Storage { read_only: true },
@@ -208,6 +226,14 @@ async fn render_async(
                 binding: 2,
                 resource: BindingResource::Buffer(BufferBinding {
                     buffer: &sphere_buffer,
+                    size: None,
+                    offset: 0,
+                }),
+            },
+            BindGroupEntry {
+                binding: 3,
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: &quad_buffer,
                     size: None,
                     offset: 0,
                 }),
