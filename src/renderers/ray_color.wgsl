@@ -1,7 +1,7 @@
 @group(0) @binding(0)
 var tex: texture_storage_2d<rgba8uint, write>;
 @group(0) @binding(1)
-var ray_tex: texture_storage_2d<rgba32float, read>;
+var ray_tex: texture_storage_3d<rgba32float, read>;
 
 struct Sphere {
     center: vec3f,
@@ -96,8 +96,8 @@ fn compute_main(@builtin(global_invocation_id) param: vec3<u32>) {
     var y = param.y;
     var x = param.x;
     var xy = param.xy;
-    var ray_origin = vec3f(0.0, 0.0, 0.0);
-    var ray_dir = textureLoad(ray_tex, xy).xyz;
+    var ray_origin = textureLoad(ray_tex, vec3u(xy, 0)).xyz;
+    var ray_dir = textureLoad(ray_tex, vec3u(xy, 1)).xyz;
     ray_dir = normalize(ray_dir);
 
     var closest_hit: HitResult = HitResult(vec3f(0.0, 0.0, 0.0), vec3f(0.0, 0.0, 0.0), vec4f(0.0, 0.0, 0.0, 0.0), 2000000000);

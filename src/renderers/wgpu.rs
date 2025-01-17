@@ -63,7 +63,7 @@ async fn render_async(
     let ray_texture_size = wgpu::Extent3d {
         width: render_params.image_width as u32,
         height: render_params.image_height as u32,
-        depth_or_array_layers: 1,
+        depth_or_array_layers: 2,
     };
 
     let color_buffer_desc = wgpu::BufferDescriptor {
@@ -89,17 +89,26 @@ async fn render_async(
         view_formats: &[],
     });
 
-    let ray_vec_len = render_params.image_width as usize * render_params.image_height as usize * 4;
+    let ray_vec_len = render_params.image_width as usize * render_params.image_height as usize * 8;
     let mut ray_vec: Vec<Float> = vec![0.0; ray_vec_len];
 
-    for i in (0..ray_vec_len).step_by(4) {
+    for i in (0..ray_vec_len / 2).step_by(4) {
         let x = (i / 4) % render_params.image_width as usize;
         let y = (i / 4) / render_params.image_width as usize;
         let ray = generate_ray(camera, (x as i32, y as i32));
-        let ray_slice = [ray.direction.x, ray.direction.y, ray.direction.z, 0.0];
-        for j in 0..4 {
-            ray_vec[i + j] = ray_slice[j];
-        }
+        let ray_slice = [
+            ray.origin.x,
+            ray.origin.y,
+            ray.origin.z,
+            1.0,
+            ray.direction.x,
+            ray.direction.y,
+            ray.direction.z,
+            0.0,
+        ];
+        ray_vec[i..i + 4].copy_from_slice(&ray_slice[0..4]);
+        let dir_i = i + ray_vec_len / 2;
+        ray_vec[dir_i..dir_i + 4].copy_from_slice(&ray_slice[4..8]);
     }
 
     let ray_texture = device.create_texture_with_data(
@@ -110,7 +119,7 @@ async fn render_async(
             size: ray_texture_size,
             mip_level_count: 1, // We'll talk about this a little later
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
+            dimension: wgpu::TextureDimension::D3,
             // Most images are stored using sRGB, so we need to reflect that here.
             format: wgpu::TextureFormat::Rgba32Float,
             usage: wgpu::TextureUsages::STORAGE_BINDING,
@@ -161,7 +170,7 @@ async fn render_async(
                 ty: BindingType::StorageTexture {
                     access: StorageTextureAccess::ReadOnly,
                     format: TextureFormat::Rgba32Float,
-                    view_dimension: TextureViewDimension::D2,
+                    view_dimension: TextureViewDimension::D3,
                 },
                 count: None,
             },
@@ -213,7 +222,7 @@ async fn render_async(
                     &TextureViewDescriptor {
                         label: Some("ray texture bind group"),
                         format: None,
-                        dimension: Some(TextureViewDimension::D2),
+                        dimension: Some(TextureViewDimension::D3),
                         aspect: TextureAspect::All,
                         base_mip_level: 0,
                         mip_level_count: None,
