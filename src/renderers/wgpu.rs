@@ -132,7 +132,7 @@ async fn render_async(
 
     let sphere_array: [Float; 8] = [0.0, 0.0, 50.0, 25.0, 5.0, 5.0, 15.0, 5.0];
 
-    let quad_array: [Float; 12] = [-2.0, 5.0, 15.0, 1.0, 5.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0];
+    let quad_array: [Float; 12] = [-2.0, 0.0, 15.0, 1.0, 5.0, 0.0, -2.0, 0.0, 0.0, 5.0, 0.0, 0.0];
 
     let sphere_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: None,
@@ -250,7 +250,7 @@ async fn render_async(
         ],
     });
 
-    let entities_array: [u32; 4] = [0, 0, 1, 0];
+    let entities_array: [u32; 4] = [0, 1, 1, 0];
 
     let entities_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: None,

@@ -110,8 +110,8 @@ fn main() {
         };
 
         let camera = Camera::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.0, 0.0, 1.0),
+            Vec3::new(-15.0, 10.0, -10.0),
+            Vec3::new(0.0, 0.0, 30.0),
             Vec3::Y,
             render_params,
         );
