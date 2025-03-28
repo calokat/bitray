@@ -14,6 +14,12 @@ struct Quad {
     v: vec4f,
 }
 
+struct Material {
+  emissive: u32,
+  color_index: u32,
+  _padding: vec2f,
+}
+
 struct ResourceDescriptor {
   kind: u32,
   index: u32,
@@ -21,6 +27,8 @@ struct ResourceDescriptor {
 
 struct Entity {
   mesh: ResourceDescriptor,
+  material_index: u32,
+  _padding: u32,
 }
 
 struct HitResult {
@@ -42,6 +50,12 @@ var<storage> spheres: array<Sphere>;
 @group(0) @binding(3)
 var<storage> quads: array<Quad>;
 
+@group(0) @binding(4)
+var<storage> materials: array<Material>;
+
+@group(0) @binding(5)
+var<storage> colors: array<vec4f>;
+
 @group(1) @binding(0)
 var<storage> entities: array<Entity>;
 
@@ -51,7 +65,7 @@ fn fail_hit(hit: HitResult) -> HitResult {
   return HitResult(hit.position, hit.normal, hit.color, hit.root, false);
 }
 
-fn hit_sphere(sphere: Sphere, ray: Ray, closest_hit: HitResult) -> HitResult {
+fn hit_sphere(entity: Entity, sphere: Sphere, ray: Ray, closest_hit: HitResult) -> HitResult {
     var sphere_center = sphere.center;
     var sphere_radius = sphere.radius;
 
@@ -71,10 +85,12 @@ fn hit_sphere(sphere: Sphere, ray: Ray, closest_hit: HitResult) -> HitResult {
     }
     var p = ray.origin + ray.direction * root;
     var normal = (sphere_center - p) / sphere_radius;
-    return HitResult(p, normal, vec4f(255, 0, 0, 255), root, true);
+    var new_hit = HitResult(p, normal, closest_hit.color, root, true);
+    new_hit.color = material_hit(entity, new_hit);
+    return new_hit;
 }
 
-fn hit_quad(quad: Quad, ray: Ray, closest_hit: HitResult) -> HitResult {
+fn hit_quad(entity: Entity, quad: Quad, ray: Ray, closest_hit: HitResult) -> HitResult {
     var quad_n: vec3f = cross(quad.u.xyz, quad.v.xyz);
     var quad_w = quad_n / dot(quad_n, quad_n);
     var quad_normal = normalize(quad_n);
@@ -97,7 +113,14 @@ fn hit_quad(quad: Quad, ray: Ray, closest_hit: HitResult) -> HitResult {
     if (alpha < 0.0 || alpha > 1.0 || beta < 0.0 || beta > 1.0) {
         return fail_hit(closest_hit);
     }
-    return HitResult(intersection, quad_normal, vec4f(0.0, 0.0, 255.0, 255.0), t, true);
+    var new_hit = HitResult(intersection, quad_normal, closest_hit.color, t, true);
+    new_hit.color = material_hit(entity, new_hit);
+    return new_hit;
+}
+
+fn material_hit(entity: Entity, hit: HitResult) -> vec4f {
+  return colors[materials[entity.material_index].color_index];
+
 }
 
 @compute @workgroup_size(64, 4, 1)
@@ -113,9 +136,9 @@ fn compute_main(@builtin(global_invocation_id) param: vec3<u32>) {
       for (var i: u32 = 0; i < arrayLength(&entities); i = i + 1) {
           var entity = entities[i];
           if (entity.mesh.kind == 0) {
-              closest_hit = hit_sphere(spheres[entity.mesh.index], Ray(ray_origin, ray_dir), closest_hit);
+              closest_hit = hit_sphere(entity, spheres[entity.mesh.index], Ray(ray_origin, ray_dir), closest_hit);
           } else if (entity.mesh.kind == 1) {
-              closest_hit = hit_quad(quads[entity.mesh.index], Ray(ray_origin, ray_dir), closest_hit);
+              closest_hit = hit_quad(entity, quads[entity.mesh.index], Ray(ray_origin, ray_dir), closest_hit);
           }
       }
 

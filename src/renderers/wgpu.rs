@@ -3,6 +3,7 @@ use std::{collections::HashMap, sync::mpsc, time::Duration};
 use bytemuck::cast_slice;
 use image::{ImageBuffer, Rgba};
 use rand::random;
+use russimp::material;
 use util::{DeviceExt, TextureDataOrder};
 use wgpu::*;
 
@@ -132,7 +133,9 @@ async fn render_async(
 
     let sphere_array: [Float; 8] = [0.0, 0.0, 50.0, 25.0, 5.0, 5.0, 15.0, 5.0];
 
-    let quad_array: [Float; 12] = [-2.0, 0.0, 15.0, 1.0, 5.0, 0.0, -2.0, 0.0, 0.0, 5.0, 0.0, 0.0];
+    let quad_array: [Float; 12] = [
+        -2.0, 0.0, 15.0, 1.0, 5.0, 0.0, -2.0, 0.0, 0.0, 5.0, 0.0, 0.0,
+    ];
 
     let sphere_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: None,
@@ -149,6 +152,22 @@ async fn render_async(
     let ray_color_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: Some("ray color"),
         source: ShaderSource::Wgsl(include_str!("ray_color.wgsl").into()),
+    });
+
+    let material_array: [u32; 8] = [0, 1, 0, 0, 1, 0, 0, 0];
+
+    let color_array: [f32; 8] = [255.0, 0.0, 0.0, 255.0, 0.0, 0.0, 255.0, 255.0];
+
+    let material_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
+        label: Some("Material Buffer"),
+        contents: bytemuck::cast_slice(&material_array),
+        usage: BufferUsages::STORAGE,
+    });
+
+    let color_resource_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
+        label: Some("Color Resource Buffer"),
+        contents: bytemuck::cast_slice(&color_array),
+        usage: BufferUsages::STORAGE,
     });
 
     let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
@@ -186,6 +205,26 @@ async fn render_async(
             },
             BindGroupLayoutEntry {
                 binding: 3,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            BindGroupLayoutEntry {
+                binding: 4,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            BindGroupLayoutEntry {
+                binding: 5,
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: BindingType::Buffer {
                     ty: BufferBindingType::Storage { read_only: true },
@@ -247,10 +286,26 @@ async fn render_async(
                     offset: 0,
                 }),
             },
+            BindGroupEntry {
+                binding: 4,
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: &material_buffer,
+                    size: None,
+                    offset: 0,
+                }),
+            },
+            BindGroupEntry {
+                binding: 5,
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: &color_resource_buffer,
+                    size: None,
+                    offset: 0,
+                }),
+            },
         ],
     });
 
-    let entities_array: [u32; 4] = [0, 1, 1, 0];
+    let entities_array: [u32; 8] = [0, 1, 0, 0, 1, 0, 1, 0];
 
     let entities_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: None,
