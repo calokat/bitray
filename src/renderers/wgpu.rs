@@ -3,11 +3,10 @@ use std::{collections::HashMap, sync::mpsc, time::Duration};
 use bytemuck::cast_slice;
 use image::{ImageBuffer, Rgba};
 use rand::random;
-use russimp::material;
-use util::{DeviceExt, TextureDataOrder};
-use wgpu::*;
+use util::DeviceExt;
+use wgpu::{util::BufferInitDescriptor, *};
 
-use crate::{camera::Camera, hittable::Hittable, render_parameters::RenderParameters, Float, Vec2};
+use crate::{camera::Camera, hittable::Hittable, render_parameters::RenderParameters, Float};
 
 pub fn render(
     camera: &Camera,
@@ -61,12 +60,6 @@ async fn render_async(
         depth_or_array_layers: 1,
     };
 
-    let ray_texture_size = wgpu::Extent3d {
-        width: render_params.image_width as u32,
-        height: render_params.image_height as u32,
-        depth_or_array_layers: 2,
-    };
-
     let color_buffer_desc = wgpu::BufferDescriptor {
         size: (render_params.image_width * render_params.image_height * 16) as u64,
         usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
@@ -90,48 +83,20 @@ async fn render_async(
         view_formats: &[],
     });
 
-    let ray_vec_len = render_params.image_width as usize * render_params.image_height as usize * 8;
-    let mut ray_vec: Vec<Float> = vec![0.0; ray_vec_len];
+    let rand_array: Vec<u32> = (0..1024).map(|_| {
+        random()
+    }).collect();
 
-    for i in (0..ray_vec_len / 2).step_by(4) {
-        let x = (i / 4) % render_params.image_width as usize;
-        let y = (i / 4) / render_params.image_width as usize;
-        let ray = generate_ray(camera, (x as i32, y as i32));
-        let ray_slice = [
-            ray.origin.x,
-            ray.origin.y,
-            ray.origin.z,
-            1.0,
-            ray.direction.x,
-            ray.direction.y,
-            ray.direction.z,
-            0.0,
-        ];
-        ray_vec[i..i + 4].copy_from_slice(&ray_slice[0..4]);
-        let dir_i = i + ray_vec_len / 2;
-        ray_vec[dir_i..dir_i + 4].copy_from_slice(&ray_slice[4..8]);
-    }
+    let rand_buffer = device.create_buffer_init(&BufferInitDescriptor {
+        label: Some("Random buffer"),
+        contents: bytemuck::cast_slice(&rand_array),
+        usage: BufferUsages::STORAGE
+    });
 
-    let ray_texture = device.create_texture_with_data(
-        &queue,
-        &wgpu::TextureDescriptor {
-            // All textures are stored as 3D, we represent our 2D texture
-            // by setting depth to 1.
-            size: ray_texture_size,
-            mip_level_count: 1, // We'll talk about this a little later
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D3,
-            // Most images are stored using sRGB, so we need to reflect that here.
-            format: wgpu::TextureFormat::Rgba32Float,
-            usage: wgpu::TextureUsages::STORAGE_BINDING,
-            label: Some("ray output"),
-            view_formats: &[],
-        },
-        TextureDataOrder::LayerMajor,
-        bytemuck::cast_slice(&ray_vec.as_slice()),
-    );
-
-    let sphere_array: [Float; 8] = [0.0, 0.0, 50.0, 25.0, 5.0, 5.0, 15.0, 5.0];
+    let sphere_array: [Float; 8] = [
+        -5.0, 0.0, 15.0, 5.0,
+        15.0, 0.0, 15.0, 5.0
+    ];
 
     let quad_array: [Float; 12] = [
         -2.0, 0.0, 15.0, 1.0, 5.0, 0.0, -2.0, 0.0, 0.0, 5.0, 0.0, 0.0,
@@ -154,9 +119,12 @@ async fn render_async(
         source: ShaderSource::Wgsl(include_str!("ray_color.wgsl").into()),
     });
 
-    let material_array: [u32; 8] = [0, 1, 0, 0, 1, 0, 0, 0];
+    let material_array: [u32; 8] = [
+        1, 0, 0, 0,
+        1, 0, 0, 0
+    ];
 
-    let color_array: [f32; 8] = [255.0, 0.0, 0.0, 255.0, 0.0, 0.0, 255.0, 255.0];
+    let color_array: [f32; 4] = [0.0, 255.0, 0.0, 255.0];
 
     let material_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: Some("Material Buffer"),
@@ -169,6 +137,15 @@ async fn render_async(
         contents: bytemuck::cast_slice(&color_array),
         usage: BufferUsages::STORAGE,
     });
+
+    let gpu_camera = camera.into_gpu_camera();
+
+    let camera_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
+        label: Some("Camera Buffer"),
+        contents: bytemuck::cast_slice(&gpu_camera),
+        usage: BufferUsages::UNIFORM,
+    });
+
 
     let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
         label: None,
@@ -186,11 +163,7 @@ async fn render_async(
             BindGroupLayoutEntry {
                 binding: 1,
                 visibility: wgpu::ShaderStages::COMPUTE,
-                ty: BindingType::StorageTexture {
-                    access: StorageTextureAccess::ReadOnly,
-                    format: TextureFormat::Rgba32Float,
-                    view_dimension: TextureViewDimension::D3,
-                },
+                ty: BindingType::Buffer { ty: BufferBindingType::Storage { read_only: true }, has_dynamic_offset: false, min_binding_size: None },
                 count: None,
             },
             BindGroupLayoutEntry {
@@ -233,6 +206,12 @@ async fn render_async(
                 },
                 count: None,
             },
+            BindGroupLayoutEntry {
+                binding: 6,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: BindingType::Buffer { ty: BufferBindingType::Uniform, has_dynamic_offset: false, min_binding_size: None },
+                count: None,
+            }
         ],
     });
 
@@ -257,18 +236,7 @@ async fn render_async(
             },
             BindGroupEntry {
                 binding: 1,
-                resource: BindingResource::TextureView(&ray_texture.create_view(
-                    &TextureViewDescriptor {
-                        label: Some("ray texture bind group"),
-                        format: None,
-                        dimension: Some(TextureViewDimension::D3),
-                        aspect: TextureAspect::All,
-                        base_mip_level: 0,
-                        mip_level_count: None,
-                        base_array_layer: 0,
-                        array_layer_count: None,
-                    },
-                )),
+                resource: BindingResource::Buffer(BufferBinding { buffer: &rand_buffer, offset: 0, size: None }),
             },
             BindGroupEntry {
                 binding: 2,
@@ -302,10 +270,21 @@ async fn render_async(
                     offset: 0,
                 }),
             },
+            BindGroupEntry {
+                binding: 6,
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: &camera_buffer,
+                    size: None,
+                    offset: 0,
+                }),
+            },
         ],
     });
 
-    let entities_array: [u32; 8] = [0, 1, 0, 0, 1, 0, 1, 0];
+    let entities_array: [u32; 8] = [
+        0, 1, 1, 0,
+        0, 0, 0, 0
+    ];
 
     let entities_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: None,
@@ -428,34 +407,4 @@ async fn render_async(
     color_buffer.unmap();
 
     return result;
-}
-
-fn generate_ray(camera: &Camera, (x, y): (i32, i32)) -> crate::ray::Ray {
-    let pixel_center = camera.pixel00_loc
-        + (x as Float * camera.pixel_delta_u)
-        + (y as Float * camera.pixel_delta_v);
-
-    let pixel_sample = pixel_center + pixel_sample_square(camera);
-
-    let ray_origin = if camera.defocus_angle <= 0.0 {
-        camera.center
-    } else {
-        defocus_disk_sample(camera)
-    };
-
-    let ray_direction = pixel_sample - ray_origin;
-
-    return crate::ray::Ray::new(ray_origin, ray_direction.normalize());
-}
-
-fn pixel_sample_square(camera: &Camera) -> crate::Vec3 {
-    let px: Float = -0.5 + random::<Float>();
-    let py: Float = -0.5 + random::<Float>();
-
-    return (camera.pixel_delta_u * px) + (camera.pixel_delta_v * py);
-}
-
-fn defocus_disk_sample(camera: &Camera) -> crate::Vec3 {
-    let p = Vec2::new(0.5, 0.5);
-    return camera.center + (p.x * camera.defocus_disk_u) + (p.y * camera.defocus_disk_v);
 }

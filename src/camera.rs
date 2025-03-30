@@ -1,6 +1,7 @@
 use crate::render_parameters::RenderParameters;
 use crate::Float;
 use crate::Vec3;
+use glam::Vec4;
 #[derive(Default)]
 pub struct Camera {
     aspect_ratio: Float,
@@ -80,4 +81,22 @@ impl Camera {
         self.defocus_disk_u = self.u * defocus_radius;
         self.defocus_disk_v = self.v * defocus_radius;
     }
+
+    pub fn into_gpu_camera(&self) -> [f32; 16] {
+        let mut result: [f32; 16] = [0.0; 16];
+
+        self.pixel00_loc.extend(1.0).write_to_slice(&mut result[0..4]);
+        self.pixel_delta_u.extend(0.0).write_to_slice(&mut result[4..8]);
+        self.pixel_delta_v.extend(0.0).write_to_slice(&mut result[8..12]);
+        self.center.extend(1.0).write_to_slice(&mut result[12..16]);
+        
+        result
+    }
+}
+
+pub struct GPUCamera {
+    pub pixel00_loc: Vec4,
+    pub pixel_delta_u: Vec4,
+    pub pixel_delta_v: Vec4,
+    pub center: Vec4,
 }
