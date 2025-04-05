@@ -77,7 +77,7 @@ async fn render_async(
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
         // Most images are stored using sRGB, so we need to reflect that here.
-        format: wgpu::TextureFormat::Rgba8Uint,
+        format: wgpu::TextureFormat::Rgba8Unorm,
         usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_SRC,
         label: Some("render output"),
         view_formats: &[],
@@ -94,8 +94,8 @@ async fn render_async(
     });
 
     let sphere_array: [Float; 8] = [
-        -5.0, 0.0, 15.0, 5.0,
-        15.0, 0.0, 15.0, 5.0
+        0.0, 0.0, 15.0, 5.0,
+        0.0, -55.0, 15.0, 50.0
     ];
 
     let quad_array: [Float; 12] = [
@@ -120,11 +120,14 @@ async fn render_async(
     });
 
     let material_array: [u32; 8] = [
-        1, 0, 0, 0,
-        1, 0, 0, 0
+        0, 0, 0, 0,
+        1, 1, 0, 0
     ];
 
-    let color_array: [f32; 4] = [0.0, 255.0, 0.0, 255.0];
+    let color_array: [f32; 8] = [
+        0.12, 0.45, 0.15, 1.0,
+        0.0, 1.0, 0.0, 1.0,
+    ];
 
     let material_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: Some("Material Buffer"),
@@ -155,7 +158,7 @@ async fn render_async(
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: BindingType::StorageTexture {
                     access: StorageTextureAccess::WriteOnly,
-                    format: TextureFormat::Rgba8Uint,
+                    format: TextureFormat::Rgba8Unorm,
                     view_dimension: TextureViewDimension::D2,
                 },
                 count: None,
@@ -281,9 +284,8 @@ async fn render_async(
         ],
     });
 
-    let entities_array: [u32; 8] = [
-        0, 1, 1, 0,
-        0, 0, 0, 0
+    let entities_array: [u32; 4] = [
+        0, 0, 0, 0,
     ];
 
     let entities_buffer = device.create_buffer_init(&util::BufferInitDescriptor {

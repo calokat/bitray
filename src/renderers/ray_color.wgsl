@@ -1,5 +1,5 @@
 @group(0) @binding(0)
-var tex: texture_storage_2d<rgba8uint, write>;
+var tex: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1)
 var<storage> rands: array<u32>;
 
@@ -195,29 +195,30 @@ fn normal_u32(u: u32) -> f32 {
 
 @compute @workgroup_size(64, 4, 1)
 fn compute_main(@builtin(global_invocation_id) param: vec3<u32>) {
-    let iterations = 50;
-    let ray_bounces = 500;
+    let iterations = 120;
+    let ray_bounces = 5;
     var y = param.y;
     var x = param.x;
 
-    var state = seed_rng(720u);
-    var color = vec4f(0.0, 0.0, 0.0, 255.0);
-    var light = vec4f(0.0, 0.0, 0.0, 0.0);
+    var state = seed_rng(810u);
+    var color = vec4f(1.0, 1.0, 1.0, 1.0);
     var closest_hit: HitResult = HitResult(vec3f(0.0, 0.0, 0.0), vec3f(0.0, 0.0, 0.0), vec4f(1.0, 1.0, 1.0, 1.0), 2000000000, 0);
 
     var pixel_center = (camera.pixel00_loc + (camera.pixel_delta_u * f32(x)) + (camera.pixel_delta_v * f32(y))).xyz; 
 
     for (var i = 0; i < iterations; i += 1) {
-        if (closest_hit.success == 2u) {
-            break;
-        }
-        var pixel_sample = pixel_center;// + pixel_sample_square(camera, 0.5, 0.5).xyz;
+        state = rng(state);
+        let px = normal_u32(state[4]) - 0.5;
+        state = rng(state);
+        let py = normal_u32(state[4]) - 0.5;
+        var pixel_sample = pixel_center + pixel_sample_square(camera, px, py).xyz;
 
         var ray_origin = camera.center.xyz;
         var ray_dir = pixel_sample - ray_origin;
         ray_dir = normalize(ray_dir);
 
         for (var j = 0; j < ray_bounces; j += 1) {
+            var ray_color = vec4f(1.0, 0.0, 0.0, 0.0);
             for (var k = 0u; k < arrayLength(&entities); k += 1u) {
                 var entity = entities[i];
                 if (entity.mesh.kind == 0) {
@@ -230,16 +231,29 @@ fn compute_main(@builtin(global_invocation_id) param: vec3<u32>) {
                 break;
             }
             if (closest_hit.success == 1) {
-                color *= closest_hit.color;
-                ray_dir = reflect(ray_dir, closest_hit.normal);
+                if (j == 0) {
+                    color = closest_hit.color;
+                } else {
+                    color *= closest_hit.color;
+                }
+
+                state = rng(state);
+                let lambert_x = normal_u32(state[4]);
+                state = rng(state);
+                let lambert_y = normal_u32(state[4]);
+                state = rng(state);
+                let lambert_z = normal_u32(state[4]);
+
+                let lambert_vec = normalize(vec3f(lambert_x, lambert_y, lambert_z));
+                ray_dir = normalize(lambert_vec + closest_hit.normal);
+                
+                //ray_dir = reflect(ray_dir, closest_hit.normal);
                 ray_origin = closest_hit.position;
             }
             else if (closest_hit.success == 2) {
-                light += closest_hit.color;
                 break;
             }
         }
     }
-    var outColor = vec4u(color + light);
-    textureStore(tex, param.xy, vec4u(outColor));
+    textureStore(tex, param.xy, color);
 }
