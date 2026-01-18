@@ -7,16 +7,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'ray_tracing_weekend_rs'",
+            "name": "Debug unit tests in library 'bitray'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=ray_tracing_weekend_rs"
+                    "--package=bitray"
                 ],
                 "filter": {
-                    "name": "ray_tracing_weekend_rs",
+                    "name": "bitray",
                     "kind": "lib"
                 }
             },
@@ -26,15 +26,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'ray_tracing_weekend_rs'",
+            "name": "Debug executable 'bitray'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=ray_tracing_weekend_rs",
-                    "--package=ray_tracing_weekend_rs"
+                    "--bin=bitray",
+                    "--package=bitray"
                 ],
                 "filter": {
-                    "name": "ray_tracing_weekend_rs",
+                    "name": "bitray",
                     "kind": "bin"
                 }
             },
@@ -44,16 +44,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'ray_tracing_weekend_rs'",
+            "name": "Debug unit tests in executable 'bitray'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=ray_tracing_weekend_rs",
-                    "--package=ray_tracing_weekend_rs"
+                    "--bin=bitray",
+                    "--package=bitray"
                 ],
                 "filter": {
-                    "name": "ray_tracing_weekend_rs",
+                    "name": "bitray",
                     "kind": "bin"
                 }
             },

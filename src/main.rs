@@ -23,7 +23,7 @@ fn main() {
     };
 
     let blue_texture = ColorTexture2D {
-        color: Color::new(0.3, 0.3, 0.8),
+        color: Color::new(0.3, 0.3, 1.0),
     };
 
     let red_texture = ColorTexture2D {
@@ -83,7 +83,7 @@ fn main() {
         );
 
         let sphere = Sphere::new(
-            Vec3::new(275.0f32, 50.0f32, 275.0f32),
+            Vec3::new(500.0f32, 50.0f32, 500.0f32),
             50.0f32,
             &mat_metal,
             "Red Sphere".into(),
@@ -94,7 +94,6 @@ fn main() {
             &floor,
             &wall_left,
             &wall_right,
-            &floor,
             &wall_back,
             &ceiling,
             &sphere,
@@ -105,7 +104,7 @@ fn main() {
             aspect_ratio: 16.0 / 9.0,
             image_width: 1920,
             image_height: 1080,
-            num_samples: 1500,
+            num_samples: 500,
             background_color: Color::new(0.0, 0.0, 0.0),
             max_depth: 20,
         };
@@ -123,7 +122,11 @@ fn main() {
 
         let scene_render = render_fn(&camera, &world, importants, render_params);
 
-        image_writer::write_image(&scene_render, (1920, 1080), 1500)
-            .expect("Image should be writable");
+        image_writer::write_image(
+            &scene_render,
+            (render_params.image_width, render_params.image_height),
+            render_params.num_samples,
+        )
+        .expect("Image should be writable");
     }
 }
