@@ -1,19 +1,38 @@
-[package]
+[workspace]
+resolver = "2"
+members = [
+    "crates/wgpu-renderer",
+    "crates/cli"
+]
+
+[workspace.package]
 name = "bitray"
 version = "0.1.0"
-edition = "2021"
-
+edition = "2024"
+authors = [
+    "caleb@calokat.me"
+]
+license = "GPLv3"
+repository = "https://github.com/calokat/bitray"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-bytemuck = "1.20.0"
-glam = "0.25.0"
+[workspace.package.lib]
+crate-type = ["lib"]
+
+[workspace.package.bin]
+name = "bitray"
+
+[workspace.dependencies]
+bytemuck = {version = "1.20.0", features = ["derive"]}
+glam = {version = "0.30.9", default-features = false}
 image = "0.24.8"
 pollster = "0.4.0"
 rand = "0.8.5"
 rayon = "1.8.1"
 russimp = "3.2.0"
-wgpu = "23.0.1"
+wgpu = { version = "27.0.1", default-features = false, features = ["std", "parking_lot", "vulkan", "vulkan-portability", "spirv", "wgsl"] }
 
-[features]
+spirv-std = { git = "https://github.com/Rust-GPU/rust-gpu", rev = "96fcc9dbe475921997050c25c02a62c7a12d48e0" }
+
+[workspace.features]
 f64 = []

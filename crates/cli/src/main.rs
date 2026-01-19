@@ -1,17 +1,17 @@
-use bitray::camera::Camera;
-use bitray::color::Color;
-use bitray::hittable::Hittable;
-use bitray::hittable::HittableList;
-use bitray::image_writer;
-use bitray::materials::diffuse_light::DiffuseLightMaterial;
-use bitray::materials::lambert::Lambert;
-use bitray::materials::metal::Metal;
-use bitray::quad::Quad;
-use bitray::render_parameters::RenderParameters;
-use bitray::renderers;
-use bitray::sphere::Sphere;
-use bitray::texture::ColorTexture2D;
-use bitray::Vec3;
+use shared::Vec3;
+use shared::camera::Camera;
+use shared::color::Color;
+use shared::hittable::Hittable;
+use shared::hittable::HittableList;
+use shared::image_writer;
+use shared::materials::diffuse_light::DiffuseLightMaterial;
+use shared::materials::lambert::Lambert;
+use shared::materials::metal::Metal;
+use shared::quad::Quad;
+use shared::render_parameters::RenderParameters;
+use shared::renderers;
+use shared::sphere::Sphere;
+use shared::texture::ColorTexture2D;
 
 fn main() {
     let grey_texture = ColorTexture2D {
@@ -110,15 +110,15 @@ fn main() {
         };
 
         let camera = Camera::new(
-            Vec3::new(0.0, 0.0, -30.0),
-            Vec3::new(0.0, 0.0, 30.0),
+            Vec3::new(240.0, 50.0, -300.0),
+            Vec3::new(240.0, 50.0, 30.0),
             Vec3::Y,
             render_params,
         );
 
         let importants = &light;
 
-        let render_fn = renderers::wgpu::render;
+        let render_fn = renderers::rayon::render;
 
         let scene_render = render_fn(&camera, &world, importants, render_params);
 

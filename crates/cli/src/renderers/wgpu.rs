@@ -6,7 +6,7 @@ use rand::random;
 use util::DeviceExt;
 use wgpu::{util::BufferInitDescriptor, *};
 
-use crate::{camera::Camera, hittable::Hittable, render_parameters::RenderParameters, Float};
+use crate::{Float, camera::Camera, hittable::Hittable, render_parameters::RenderParameters};
 
 pub fn render(
     camera: &Camera,
@@ -83,20 +83,15 @@ async fn render_async(
         view_formats: &[],
     });
 
-    let rand_array: Vec<u32> = (0..1024).map(|_| {
-        random()
-    }).collect();
+    let rand_array: Vec<u32> = (0..1024).map(|_| random()).collect();
 
     let rand_buffer = device.create_buffer_init(&BufferInitDescriptor {
         label: Some("Random buffer"),
         contents: bytemuck::cast_slice(&rand_array),
-        usage: BufferUsages::STORAGE
+        usage: BufferUsages::STORAGE,
     });
 
-    let sphere_array: [Float; 8] = [
-        0.0, 0.0, 15.0, 5.0,
-        0.0, -55.0, 15.0, 50.0
-    ];
+    let sphere_array: [Float; 8] = [0.0, 0.0, 15.0, 5.0, 0.0, -55.0, 15.0, 50.0];
 
     let quad_array: [Float; 12] = [
         -2.0, 0.0, 15.0, 1.0, 5.0, 0.0, -2.0, 0.0, 0.0, 5.0, 0.0, 0.0,
@@ -119,15 +114,9 @@ async fn render_async(
         source: ShaderSource::Wgsl(include_str!("ray_color.wgsl").into()),
     });
 
-    let material_array: [u32; 8] = [
-        0, 0, 0, 0,
-        1, 1, 0, 0
-    ];
+    let material_array: [u32; 8] = [0, 0, 0, 0, 1, 1, 0, 0];
 
-    let color_array: [f32; 8] = [
-        0.12, 0.45, 0.15, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-    ];
+    let color_array: [f32; 8] = [0.12, 0.45, 0.15, 1.0, 0.0, 1.0, 0.0, 1.0];
 
     let material_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: Some("Material Buffer"),
@@ -149,7 +138,6 @@ async fn render_async(
         usage: BufferUsages::UNIFORM,
     });
 
-
     let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
         label: None,
         entries: &[
@@ -166,7 +154,11 @@ async fn render_async(
             BindGroupLayoutEntry {
                 binding: 1,
                 visibility: wgpu::ShaderStages::COMPUTE,
-                ty: BindingType::Buffer { ty: BufferBindingType::Storage { read_only: true }, has_dynamic_offset: false, min_binding_size: None },
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
                 count: None,
             },
             BindGroupLayoutEntry {
@@ -212,9 +204,13 @@ async fn render_async(
             BindGroupLayoutEntry {
                 binding: 6,
                 visibility: wgpu::ShaderStages::COMPUTE,
-                ty: BindingType::Buffer { ty: BufferBindingType::Uniform, has_dynamic_offset: false, min_binding_size: None },
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
                 count: None,
-            }
+            },
         ],
     });
 
@@ -239,7 +235,11 @@ async fn render_async(
             },
             BindGroupEntry {
                 binding: 1,
-                resource: BindingResource::Buffer(BufferBinding { buffer: &rand_buffer, offset: 0, size: None }),
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: &rand_buffer,
+                    offset: 0,
+                    size: None,
+                }),
             },
             BindGroupEntry {
                 binding: 2,
@@ -284,9 +284,7 @@ async fn render_async(
         ],
     });
 
-    let entities_array: [u32; 4] = [
-        0, 0, 0, 0,
-    ];
+    let entities_array: [u32; 4] = [0, 0, 0, 0];
 
     let entities_buffer = device.create_buffer_init(&util::BufferInitDescriptor {
         label: None,

@@ -1,24 +1,3 @@
-pub mod aabb;
-pub mod bvh;
-pub mod camera;
-pub mod color;
-pub mod hittable;
-pub mod image_writer;
-pub mod interval;
-pub mod materials;
-pub mod mesh;
-pub mod onb;
-pub mod pdf;
-pub mod quad;
-pub mod rand_vec3;
-pub mod ray;
-pub mod render_parameters;
-pub mod renderers;
-pub mod sphere;
-pub mod texture;
-pub mod triangle;
-pub mod vertex;
-
 #[cfg(not(feature = "f64"))]
 pub type Float = f32;
 #[cfg(not(feature = "f64"))]
@@ -44,3 +23,23 @@ pub type Vec2 = glam::DVec2;
 pub type Mat4 = glam::DMat4;
 #[cfg(feature = "f64")]
 pub type Mat3 = glam::DMat3;
+
+pub mod aabb;
+pub mod bvh;
+pub mod camera;
+pub mod color;
+pub mod hittable;
+pub mod image_writer;
+pub mod interval;
+pub mod materials;
+pub mod mesh;
+pub mod onb;
+pub mod pdf;
+pub mod quad;
+pub mod rand_vec3;
+pub mod ray;
+pub mod render_parameters;
+pub mod sphere;
+pub mod texture;
+pub mod triangle;
+pub mod vertex;

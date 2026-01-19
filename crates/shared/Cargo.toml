@@ -1,0 +1,24 @@
+[package]
+name = "shared"
+publish = false
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+# shader crate
+image.workspace = true
+bytemuck.workspace = true
+glam.workspace = true
+pollster.workspace = true
+rand.workspace = true
+rayon.workspace = true
+russimp.workspace = true
+wgpu.workspace = true
+
+[build-dependencies]
+# rust-gpu
+cargo-gpu = { git = "https://github.com/Rust-GPU/cargo-gpu", rev = "bb74342b90066ce8b7d50ba8e058df356a54acf4" }
+anyhow = "1.0.98"

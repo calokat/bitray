@@ -1,0 +1,15 @@
+[package]
+name = "cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+image.workspace = true
+bytemuck.workspace = true
+glam.workspace = true
+pollster.workspace = true
+rand.workspace = true
+rayon.workspace = true
+russimp.workspace = true
+wgpu.workspace = true
+shared = {path = "../shared"}
