@@ -76,7 +76,7 @@ async fn render_async(
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
         // Most images are stored using sRGB, so we need to reflect that here.
-        format: wgpu::TextureFormat::Rgba8Unorm,
+        format: wgpu::TextureFormat::Rgba8Snorm,
         usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_SRC,
         label: Some("render output"),
         view_formats: &[],
@@ -141,8 +141,8 @@ async fn render_async(
                 binding: 0,
                 visibility: wgpu::ShaderStages::COMPUTE,
                 ty: BindingType::StorageTexture {
-                    access: StorageTextureAccess::WriteOnly,
-                    format: TextureFormat::Rgba8Unorm,
+                    access: StorageTextureAccess::ReadWrite,
+                    format: TextureFormat::Rgba8Snorm,
                     view_dimension: TextureViewDimension::D2,
                 },
                 count: None,
@@ -350,15 +350,15 @@ async fn render_async(
         compute_pass.dispatch_workgroups(color_texture_size.width, color_texture_size.height, 1);
     }
     encoder.copy_texture_to_buffer(
-        ImageCopyTexture {
+        TexelCopyTextureInfo {
             texture: &color_texture,
             mip_level: 0,
             origin: Origin3d::ZERO,
             aspect: TextureAspect::All,
         },
-        ImageCopyBuffer {
+        TexelCopyBufferInfo {
             buffer: &color_buffer,
-            layout: wgpu::ImageDataLayout {
+            layout: wgpu::TexelCopyBufferLayout {
                 offset: 0,
                 bytes_per_row: Some(color_texture_size.width * 4),
                 rows_per_image: None,
@@ -368,8 +368,8 @@ async fn render_async(
     );
     queue.submit(std::iter::once(encoder.finish()));
 
-    let black = crate::color::Color::new(0.0, 0.0, 0.0);
-    let mut result: Vec<Vec<crate::color::Color>> =
+    let black = shared::color::Color::new(0.0, 0.0, 0.0);
+    let mut result: Vec<Vec<shared::color::Color>> =
         vec![vec![black; render_params.image_width as usize]; render_params.image_height as usize];
     {
         let (tx, rx) = mpsc::channel();
@@ -378,7 +378,10 @@ async fn render_async(
         buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
             tx.send(result).unwrap();
         });
-        device.poll(wgpu::Maintain::Wait);
+        device.poll(wgpu::PollType::Wait {
+            submission_index: None,
+            timeout: None,
+        });
         rx.recv_timeout(Duration::from_secs(5)).unwrap().unwrap();
 
         let data = buffer_slice.get_mapped_range();
@@ -392,7 +395,7 @@ async fn render_async(
         let mut buffer_iter = buffer.iter();
         for y in 0..render_params.image_height as usize {
             for x in 0..render_params.image_width as usize {
-                result[y][x] = crate::color::Color::new(
+                result[y][x] = shared::color::Color::new(
                     *buffer_iter.next().unwrap() as Float,
                     *buffer_iter.next().unwrap() as Float,
                     *buffer_iter.next().unwrap() as Float,

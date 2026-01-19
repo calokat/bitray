@@ -1,4 +1,5 @@
-use crate::{
+use shared::{
+    Float, Vec3,
     camera::Camera,
     color::Color,
     hittable::Hittable,
@@ -7,7 +8,6 @@ use crate::{
     rand_vec3::random_vec_unit_disk,
     ray::Ray,
     render_parameters::RenderParameters,
-    Float, Vec3,
 };
 
 use rand::random;

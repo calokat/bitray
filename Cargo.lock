@@ -391,6 +391,7 @@ dependencies = [
  "russimp",
  "shared",
  "wgpu",
+ "wgpu-renderer",
 ]
 
 [[package]]

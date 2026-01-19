@@ -13,3 +13,4 @@ rayon.workspace = true
 russimp.workspace = true
 wgpu.workspace = true
 shared = {path = "../shared"}
+wgpu-renderer = {path = "../wgpu-renderer"}

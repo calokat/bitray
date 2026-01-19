@@ -1,3 +1,4 @@
+pub mod renderers;
 use shared::Vec3;
 use shared::camera::Camera;
 use shared::color::Color;
@@ -9,7 +10,6 @@ use shared::materials::lambert::Lambert;
 use shared::materials::metal::Metal;
 use shared::quad::Quad;
 use shared::render_parameters::RenderParameters;
-use shared::renderers;
 use shared::sphere::Sphere;
 use shared::texture::ColorTexture2D;
 
@@ -118,14 +118,14 @@ fn main() {
 
         let importants = &light;
 
-        let render_fn = renderers::rayon::render;
-
+        // let render_fn = renderers::rayon::render;
+        let render_fn = wgpu_renderer::render;
         let scene_render = render_fn(&camera, &world, importants, render_params);
 
         image_writer::write_image(
             &scene_render,
             (render_params.image_width, render_params.image_height),
-            1500,
+            1,
         )
         .expect("Image should be writable");
     }
