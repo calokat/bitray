@@ -2,8 +2,7 @@ pub mod renderers;
 use shared::Vec3;
 use shared::camera::Camera;
 use shared::color::Color;
-use shared::hittable::Hittable;
-use shared::hittable::HittableList;
+// use shared::hittable::Hittable;
 use shared::image_writer;
 use shared::materials::diffuse_light::DiffuseLightMaterial;
 use shared::materials::lambert::Lambert;
@@ -89,17 +88,17 @@ fn main() {
             "Red Sphere".into(),
         );
 
-        let objects: Vec<&dyn Hittable> = vec![
-            &light,
-            &floor,
-            &wall_left,
-            &wall_right,
-            &floor,
-            &wall_back,
-            &ceiling,
-            &sphere,
-        ];
-        let world = HittableList::new(objects);
+        // let objects: Vec<&dyn Hittable> = vec![
+        //     &light,
+        //     &floor,
+        //     &wall_left,
+        //     &wall_right,
+        //     &floor,
+        //     &wall_back,
+        //     &ceiling,
+        //     &sphere,
+        // ];
+        let world = sphere;
 
         let render_params = RenderParameters {
             image_width: 1024,

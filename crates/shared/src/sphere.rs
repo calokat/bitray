@@ -1,8 +1,8 @@
 use rand::random;
 
 use crate::onb::ONB;
-use crate::{Float, Vec2, Vec3, PI};
-use std::fmt::{Debug, Write};
+use crate::{Float, PI, Vec2, Vec3};
+use core::fmt::{Debug, Write};
 
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
@@ -110,7 +110,7 @@ impl<'a> Hittable for Sphere<'a> {
 }
 
 impl<'a> Debug for Sphere<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str("Sphere ")?;
         f.write_str(&self.get_name())?;
         f.write_char('\n')?;

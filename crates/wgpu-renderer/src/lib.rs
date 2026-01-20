@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::mpsc, time::Duration};
+use std::{sync::mpsc, time::Duration};
 
 use bytemuck::cast_slice;
 use image::{ImageBuffer, Rgba};
@@ -366,7 +366,7 @@ async fn render_async(
         },
         color_texture_size,
     );
-    queue.submit(std::iter::once(encoder.finish()));
+    queue.submit(core::iter::once(encoder.finish()));
 
     let black = shared::color::Color::new(0.0, 0.0, 0.0);
     let mut result: Vec<Vec<shared::color::Color>> =

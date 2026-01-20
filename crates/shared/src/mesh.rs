@@ -1,16 +1,16 @@
-use std::fmt::Debug;
-use std::fmt::Write;
+use core::fmt::Debug;
+use core::fmt::Write;
 
+use crate::Float;
 use crate::aabb::AABB;
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 use crate::materials::material::Material;
 use crate::triangle::Triangle;
 use crate::vertex::Vertex;
-use crate::Float;
 use crate::{Mat4, Vec2, Vec3};
-use russimp::scene::{PostProcess, Scene};
 use russimp::Vector3D;
+use russimp::scene::{PostProcess, Scene};
 
 pub struct MeshOptions {
     triangles: Vec<Triangle>,
@@ -151,7 +151,7 @@ impl<'a> Hittable for Mesh<'a> {
 }
 
 impl<'a> Debug for Mesh<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(" Mesh ")?;
         f.write_str(&self.name)?;
         f.write_char('\n')?;

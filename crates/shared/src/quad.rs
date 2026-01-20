@@ -1,14 +1,14 @@
 use crate::{
+    Float,
     aabb::AABB,
     hittable::{HitRecord, Hittable},
     interval::Interval,
     materials::material::Material,
     ray::Ray,
-    Float,
 };
 use crate::{Vec2, Vec3};
+use core::fmt::{Debug, Write};
 use rand::random;
-use std::fmt::{Debug, Write};
 
 pub struct Quad<'a> {
     q: Vec3,
@@ -123,7 +123,7 @@ impl<'a> Hittable for Quad<'a> {
 }
 
 impl<'a> Debug for Quad<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(" Quad ")?;
         f.write_char('\n')?;
         Ok(())
