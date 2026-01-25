@@ -10,8 +10,8 @@ repository.workspace = true
 [dependencies]
 # shader crate
 bytemuck.workspace = true
-glam.workspace = true
 libm = "0.2.16"
+spirv-std = { workspace = true }
 
 [build-dependencies]
 # rust-gpu

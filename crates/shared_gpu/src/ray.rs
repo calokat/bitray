@@ -1,4 +1,5 @@
-use crate::{Float, Vec3};
+use spirv_std::glam::Vec3;
+
 #[derive(Copy, Clone)]
 pub struct Ray {
     pub origin: Vec3,
@@ -10,7 +11,7 @@ impl Ray {
         Self { origin, direction }
     }
 
-    pub fn at(&self, t: Float) -> Vec3 {
+    pub fn at(&self, t: f32) -> Vec3 {
         self.origin + self.direction * t
     }
 }

@@ -1,14 +1,13 @@
-use crate::Float;
-use crate::Vec3;
 use crate::rand::Rng;
 use crate::rand_vec3::random_vec_unit_disk;
 use crate::ray::Ray;
 use crate::render_parameters::RenderParameters;
-use glam::UVec2;
-use glam::Vec2;
-use glam::Vec4;
+use spirv_std::glam::UVec2;
+use spirv_std::glam::Vec2;
+use spirv_std::glam::Vec3;
+use spirv_std::glam::Vec4;
 pub struct Camera {
-    aspect_ratio: Float,
+    aspect_ratio: f32,
     image_width: i32,
     image_height: i32,
     pub center: Vec3,
@@ -17,7 +16,7 @@ pub struct Camera {
     pub pixel_delta_v: Vec3,
     num_samples: i32,
     max_depth: i32,
-    vertical_fov: Float,
+    vertical_fov: f32,
     pub look_from: Vec3,
     pub look_at: Vec3,
     pub up: Vec3,
@@ -26,13 +25,13 @@ pub struct Camera {
     w: Vec3,
     pub defocus_disk_u: Vec3,
     pub defocus_disk_v: Vec3,
-    pub defocus_angle: Float,
-    focus_distance: Float,
+    pub defocus_angle: f32,
+    focus_distance: f32,
 }
 
 impl Camera {
     pub fn new(look_from: Vec3, look_at: Vec3, up: Vec3, render_params: RenderParameters) -> Self {
-        let aspect_ratio = render_params.image_width as Float / render_params.image_height as Float;
+        let aspect_ratio = render_params.image_width as f32 / render_params.image_height as f32;
         let w = (look_from - look_at).normalize();
         let u = up.cross(w).normalize();
         let v = w.cross(u);
@@ -45,12 +44,12 @@ impl Camera {
         let focus_distance = 1.0f32;
         let viewport_height = 2.0 * h * focus_distance;
         let viewport_width = viewport_height
-            * (render_params.image_width as Float / render_params.image_height as Float);
+            * (render_params.image_width as f32 / render_params.image_height as f32);
         let viewport_u = viewport_width * u;
         let viewport_v = viewport_height * -v;
 
-        let pixel_delta_u = viewport_u / render_params.image_width as Float;
-        let pixel_delta_v = viewport_v / render_params.image_height as Float;
+        let pixel_delta_u = viewport_u / render_params.image_width as f32;
+        let pixel_delta_v = viewport_v / render_params.image_height as f32;
 
         let center = look_from;
 
@@ -64,7 +63,7 @@ impl Camera {
         let cam = Self {
             aspect_ratio: aspect_ratio,
             image_width: render_params.image_width,
-            image_height: (render_params.image_width as Float / aspect_ratio) as i32,
+            image_height: (render_params.image_width as f32 / aspect_ratio) as i32,
             num_samples: render_params.num_samples,
             max_depth: render_params.max_depth,
             vertical_fov: 60.0,
@@ -105,8 +104,8 @@ impl Camera {
 
     pub fn generate_ray(&self, screen_coords: UVec2) -> Ray {
         let pixel_center = self.pixel00_loc
-            + (screen_coords.x as Float * self.pixel_delta_u)
-            + (screen_coords.y as Float * self.pixel_delta_v);
+            + (screen_coords.x as f32 * self.pixel_delta_u)
+            + (screen_coords.y as f32 * self.pixel_delta_v);
 
         let pixel_sample = pixel_center + self.pixel_sample_square();
 
@@ -123,8 +122,8 @@ impl Camera {
 
     fn pixel_sample_square(&self) -> Vec3 {
         let mut rng = Rng::new();
-        let px: Float = -0.5 + rng.f32();
-        let py: Float = -0.5 + rng.f32();
+        let px: f32 = -0.5 + rng.f32();
+        let py: f32 = -0.5 + rng.f32();
 
         return (px * self.pixel_delta_u) + (py * self.pixel_delta_v);
     }

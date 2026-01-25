@@ -2356,8 +2356,8 @@ dependencies = [
  "anyhow",
  "bytemuck",
  "cargo-gpu 0.1.0 (git+https://github.com/Rust-GPU/cargo-gpu?rev=bb74342b90066ce8b7d50ba8e058df356a54acf4)",
- "glam",
  "libm",
+ "spirv-std",
 ]
 
 [[package]]
@@ -3112,7 +3112,6 @@ dependencies = [
  "anyhow",
  "bytemuck",
  "cargo-gpu 0.1.0 (git+https://github.com/Rust-GPU/cargo-gpu?rev=70160693564611ca85e17a3c441da93ee642d29a)",
- "glam",
  "image",
  "pollster",
  "rand",
@@ -3127,7 +3126,6 @@ name = "wgpu-renderer-shaders"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
- "glam",
  "shared_gpu",
  "spirv-std",
 ]

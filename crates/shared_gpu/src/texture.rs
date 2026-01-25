@@ -1,4 +1,4 @@
-use crate::Vec2;
+use spirv_std::glam::Vec2;
 
 use crate::color::Color;
 #[derive(Clone, Copy)]

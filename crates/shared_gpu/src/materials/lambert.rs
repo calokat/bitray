@@ -3,8 +3,7 @@ use crate::onb::ONB;
 use crate::rand_vec3::random_cosine_direction;
 use crate::ray::Ray;
 use crate::texture::Sampler2D;
-use crate::{Float, PI};
-
+use core::f32;
 #[derive(Clone, Copy)]
 pub struct Lambert {
     albedo: Sampler2D,
@@ -34,11 +33,11 @@ impl Lambert {
         _r_in: &Ray,
         hit_record: &crate::hittable::HitRecord,
         scattered_ray: &Ray,
-    ) -> Float {
+    ) -> f32 {
         let cos_theta = hit_record
             .normal
             .normalize()
             .dot(scattered_ray.direction.normalize());
-        (0.0 as Float).max(cos_theta / PI)
+        (0.0 as f32).max(cos_theta / f32::consts::PI)
     }
 }

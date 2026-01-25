@@ -1,17 +1,23 @@
 #![no_std]
 
 use bytemuck::{Pod, Zeroable};
-use glam::{UVec3, Vec3, Vec3Swizzles, Vec4};
 use shared_gpu::{
     camera::Camera,
     color::Color,
-    hittable::Hittable,
+    hittable::{HitRecord, Hittable},
     interval::Interval,
-    materials::{lambert::Lambert, material::Material},
+    materials::{
+        lambert::Lambert,
+        material::{Material, MaterialHitResult, MaterialType},
+    },
+    onb::ONB,
+    rand_vec3::random_cosine_direction,
+    ray::Ray,
     render_parameters::RenderParameters,
     sphere::Sphere,
     texture::{ColorTexture2D, Sampler2D},
 };
+use spirv_std::glam::{UVec3, Vec3, Vec3Swizzles, Vec4};
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
 use spirv_std::{Image, spirv};
@@ -24,6 +30,13 @@ pub struct ShaderConstants {
     pub time: f32,
 }
 
+fn lambert_scatter(_r_in: &Ray, rec: &shared_gpu::hittable::HitRecord) -> Ray {
+    return Ray::new(
+        rec.p,
+        ONB::new(&rec.normal).transform(&random_cosine_direction()),
+    );
+}
+
 #[spirv(compute(threads(64)))]
 pub fn compute_main(
     #[spirv(global_invocation_id)] id: UVec3,
@@ -33,11 +46,7 @@ pub fn compute_main(
         sampled = false
     ),
 ) {
-    let red_texture = Sampler2D::ColorTexture2D(ColorTexture2D {
-        color: Color::new(1.0, 0.0, 0.0),
-    });
-    let material = Material::LambertMaterial(Lambert::new(red_texture.clone()));
-    let sphere: Sphere = Sphere::new(Vec3::ZERO, 15.0, material.clone());
+    let sphere: Sphere = Sphere::new(Vec3::ZERO, 15.0, MaterialType::Lambert);
     let camera = Camera::new(
         Vec3::NEG_Z * 30.0,
         Vec3::ZERO,
@@ -50,12 +59,24 @@ pub fn compute_main(
             background_color: Color::black(),
         },
     );
-    let ray = camera.generate_ray(id.truncate().into());
-    let color_vec: Vec4 = if sphere.hit(&ray, Interval::universe()) {
-        Vec4::new(1.0, 0.0, 0.0, 1.0)
-    } else {
-        Vec4::ZERO
-    };
+    let num_samples = 2;
+    let max_depth = 2;
+
+    let mut color_vec: Vec4 = Vec4::ZERO;
+    let mut ray: Ray = camera.generate_ray(id.truncate().into());
+    for i in 0..num_samples {
+        let mut color_sample = Vec4::ZERO;
+        for j in 0..max_depth {
+            let hit_result: (bool, HitRecord) = sphere.hit(&ray, Interval::universe());
+            if hit_result.0 {
+                color_sample *= Vec4::new(0.1, 0.0, 0.0, 0.0);
+                ray = lambert_scatter(&ray, &hit_result.1);
+            } else {
+                break;
+            }
+        }
+        color_vec += color_sample / num_samples as f32;
+    }
     unsafe {
         color_out.write(id.xy(), color_vec);
     }

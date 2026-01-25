@@ -12,7 +12,6 @@ repository.workspace = true
 wgpu-renderer-shaders = { path = "./wgpu-renderer-shaders" }
 image.workspace = true
 bytemuck.workspace = true
-glam.workspace = true
 pollster.workspace = true
 rand.workspace = true
 wgpu.workspace = true

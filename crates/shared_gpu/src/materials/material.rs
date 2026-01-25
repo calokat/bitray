@@ -1,6 +1,7 @@
 use crate::color::Color;
 use crate::materials::lambert::Lambert;
 use crate::ray::Ray;
+
 #[derive(Clone, Copy)]
 pub struct MaterialHitResult {
     pub color: Color,
@@ -8,8 +9,15 @@ pub struct MaterialHitResult {
 }
 
 #[derive(Clone, Copy)]
+pub enum MaterialType {
+    Lambert,
+    Void,
+}
+
+#[derive(Clone, Copy)]
 pub enum Material {
     LambertMaterial(Lambert),
+    VoidMaterial,
 }
 
 impl Material {
@@ -20,6 +28,7 @@ impl Material {
     ) -> Option<MaterialHitResult> {
         match &self {
             &Material::LambertMaterial(lambert) => lambert.scatter(r_in, rec),
+            &Material::VoidMaterial => None,
         }
     }
 }

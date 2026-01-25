@@ -6,7 +6,7 @@ edition.workspace = true
 [dependencies]
 image.workspace = true
 bytemuck.workspace = true
-glam.workspace = true
+glam = {version = ">=0.30.8", default-features = false, features = ["libm"]}
 pollster.workspace = true
 rand.workspace = true
 rayon.workspace = true
