@@ -4,9 +4,7 @@ use shared::camera::Camera;
 use shared::color::Color;
 // use shared::hittable::Hittable;
 use shared::image_writer;
-use shared::materials::diffuse_light::DiffuseLightMaterial;
 use shared::materials::lambert::Lambert;
-use shared::materials::metal::Metal;
 use shared::quad::Quad;
 use shared::render_parameters::RenderParameters;
 use shared::sphere::Sphere;
@@ -38,9 +36,6 @@ fn main() {
     let mat_red = Lambert::new(&red_texture);
 
     let mat_lambert = Lambert::new(&grey_texture);
-    let mat_metal = Metal::new(&blue_texture, 0.0);
-
-    let mat_light = DiffuseLightMaterial::new(&light_texture);
 
     {
         let wall_left = Quad::new(
@@ -74,18 +69,12 @@ fn main() {
             Vec3::Z * 555.0,
             &mat_lambert,
         );
-        let light = Quad::new(
-            Vec3::new(213.0, 554.0, 227.0),
-            Vec3::Z * 105.0,
-            Vec3::X * 130.0,
-            &mat_light,
-        );
 
         let sphere = Sphere::new(
             Vec3::new(275.0f32, 50.0f32, 275.0f32),
             50.0f32,
-            &mat_metal,
-            "Red Sphere".into(),
+            &mat_red,
+            "Wow".into(),
         );
 
         // let objects: Vec<&dyn Hittable> = vec![
@@ -98,7 +87,7 @@ fn main() {
         //     &ceiling,
         //     &sphere,
         // ];
-        let world = sphere;
+        let world = &sphere;
 
         let render_params = RenderParameters {
             image_width: 1024,
@@ -115,17 +104,20 @@ fn main() {
             render_params,
         );
 
-        let importants = &light;
+        let importants = &sphere;
 
         // let render_fn = renderers::rayon::render;
         let render_fn = wgpu_renderer::render;
-        let scene_render = render_fn(&camera, &world, importants, render_params);
+        let scene_render = render_fn(&camera, world, importants, render_params);
 
-        image_writer::write_image(
-            &scene_render,
-            (render_params.image_width, render_params.image_height),
-            1,
-        )
-        .expect("Image should be writable");
+        let img = image::ImageBuffer::from_fn(
+            render_params.image_width as u32,
+            render_params.image_height as u32,
+            |x, y| {
+                let c = scene_render[y as usize][x as usize];
+                image::Rgb(c.to_output_array(1))
+            },
+        );
+        img.save("image.png");
     }
 }

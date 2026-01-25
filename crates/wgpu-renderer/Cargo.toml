@@ -15,12 +15,11 @@ bytemuck.workspace = true
 glam.workspace = true
 pollster.workspace = true
 rand.workspace = true
-rayon.workspace = true
-russimp.workspace = true
 wgpu.workspace = true
+shared_gpu = {path = "../shared_gpu"}
 shared = {path = "../shared"}
 
 [build-dependencies]
 # rust-gpu
-cargo-gpu = { git = "https://github.com/Rust-GPU/cargo-gpu", rev = "bb74342b90066ce8b7d50ba8e058df356a54acf4" }
+cargo-gpu = { git = "https://github.com/Rust-GPU/cargo-gpu", rev = "70160693564611ca85e17a3c441da93ee642d29a" }
 anyhow = "1.0.98"

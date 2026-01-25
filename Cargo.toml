@@ -2,7 +2,8 @@
 resolver = "2"
 members = [
     "crates/wgpu-renderer",
-    "crates/cli"
+    "crates/cli",
+    "crates/shared_gpu"
 ]
 
 [workspace.package]
@@ -24,7 +25,7 @@ name = "bitray"
 
 [workspace.dependencies]
 bytemuck = {version = "1.20.0", features = ["derive"]}
-glam = {version = "0.30.9", default-features = false}
+glam = {version = ">=0.30.8", default-features = false, features = ["libm"]}
 image = "0.24.8"
 pollster = "0.4.0"
 rand = "0.8.5"
@@ -32,7 +33,7 @@ rayon = "1.8.1"
 russimp = "3.2.0"
 wgpu = { version = "27.0.1", default-features = false, features = ["std", "parking_lot", "vulkan", "vulkan-portability", "spirv", "wgsl"] }
 
-spirv-std = { git = "https://github.com/Rust-GPU/rust-gpu", rev = "96fcc9dbe475921997050c25c02a62c7a12d48e0" }
+spirv-std = { path = "../rust-gpu/crates/spirv-std", default-features = false }
 
 [workspace.features]
 f64 = []

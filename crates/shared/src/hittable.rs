@@ -1,9 +1,9 @@
+use crate::Float;
+use crate::Vec2;
 use crate::interval::Interval;
 use crate::materials::material::Material;
 use crate::ray::Ray;
-use crate::Float;
-use crate::Vec2;
-use crate::{aabb::AABB, Vec3};
+use crate::{Vec3, aabb::AABB};
 use core::fmt::Debug;
 use std::vec::Vec;
 
