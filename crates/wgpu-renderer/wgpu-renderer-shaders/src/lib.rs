@@ -11,16 +11,20 @@ use shared_gpu::{
         material::{Material, MaterialHitResult, MaterialType},
     },
     onb::ONB,
+    quad::Quad,
     rand_vec3::random_cosine_direction,
     ray::Ray,
     render_parameters::RenderParameters,
     sphere::Sphere,
     texture::{ColorTexture2D, Sampler2D},
 };
-use spirv_std::glam::{UVec3, Vec3, Vec3Swizzles, Vec4};
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
 use spirv_std::{Image, spirv};
+use spirv_std::{
+    VectorTruncateInto,
+    glam::{UVec3, Vec3, Vec3Swizzles, Vec4},
+};
 
 #[derive(Copy, Clone, Pod, Zeroable)]
 #[repr(C)]
@@ -47,8 +51,9 @@ pub fn compute_main(
     ),
 ) {
     let sphere: Sphere = Sphere::new(Vec3::ZERO, 15.0, MaterialType::Lambert);
+    let light_sphere = Sphere::new(Vec3::new(10.0, 40.0, 0.0), 10.0, MaterialType::Lambert);
     let camera = Camera::new(
-        Vec3::NEG_Z * 30.0,
+        Vec3::NEG_Z * 60.0,
         Vec3::ZERO,
         Vec3::Y,
         RenderParameters {
@@ -65,14 +70,21 @@ pub fn compute_main(
     let mut color_vec: Vec4 = Vec4::ZERO;
     let mut ray: Ray = camera.generate_ray(id.truncate().into());
     for i in 0..num_samples {
-        let mut color_sample = Vec4::ZERO;
+        let mut color_sample = Vec4::ONE;
         for j in 0..max_depth {
-            let hit_result: (bool, HitRecord) = sphere.hit(&ray, Interval::universe());
+            let hit_result: (bool, HitRecord) = sphere.hit(&ray, Interval::new(0.0001, f32::MAX));
             if hit_result.0 {
-                color_sample *= Vec4::new(0.1, 0.0, 0.0, 0.0);
+                color_sample *= Vec4::new(0.4, 0.4, 0.0, 1.0);
                 ray = lambert_scatter(&ray, &hit_result.1);
             } else {
-                break;
+                let hit_result = light_sphere.hit(&ray, Interval::new(0.0001, f32::MAX));
+                if hit_result.0 {
+                    color_sample *= Vec4::new(3.0, 2.0, 0.2, 1.0);
+                    break;
+                } else {
+                    color_sample = Vec4::new(0.0, 0.0, 0.0, 1.0);
+                    break;
+                }
             }
         }
         color_vec += color_sample / num_samples as f32;

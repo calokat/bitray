@@ -3,6 +3,7 @@
 pub mod aabb;
 pub mod camera;
 pub mod color;
+pub mod color_u8;
 pub mod hittable;
 pub mod interval;
 pub mod materials;

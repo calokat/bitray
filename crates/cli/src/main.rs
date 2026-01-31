@@ -115,7 +115,7 @@ fn main() {
             render_params.image_height as u32,
             |x, y| {
                 let c = scene_render[y as usize][x as usize];
-                image::Rgb(c.to_output_array(1))
+                image::Rgb([c.0.x, c.0.y, c.0.z])
             },
         );
         img.save("image.png");

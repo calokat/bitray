@@ -13,7 +13,7 @@ pub fn render(
     world: &dyn Hittable,
     importants: &dyn Hittable,
     render_params: RenderParameters,
-) -> Vec<Vec<shared::color::Color>> {
+) -> Vec<Vec<shared_gpu::color_u8::ColorU8>> {
     pollster::block_on(render_async(camera, world, importants, render_params))
 }
 
@@ -22,7 +22,7 @@ async fn render_async(
     world: &dyn Hittable,
     importants: &dyn Hittable,
     render_params: RenderParameters,
-) -> Vec<Vec<shared::color::Color>> {
+) -> Vec<Vec<shared_gpu::color_u8::ColorU8>> {
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
         backends: Backends::PRIMARY,
         ..Default::default()
@@ -368,8 +368,8 @@ async fn render_async(
     );
     queue.submit(core::iter::once(encoder.finish()));
 
-    let black = shared::color::Color::new(0.0, 0.0, 0.0);
-    let mut result: Vec<Vec<shared::color::Color>> =
+    let black = shared_gpu::color_u8::ColorU8::new(0, 0, 0);
+    let mut result: Vec<Vec<shared_gpu::color_u8::ColorU8>> =
         vec![vec![black; render_params.image_width as usize]; render_params.image_height as usize];
     {
         let (tx, rx) = mpsc::channel();
@@ -395,10 +395,10 @@ async fn render_async(
         let mut buffer_iter = buffer.iter();
         for y in 0..render_params.image_height as usize {
             for x in 0..render_params.image_width as usize {
-                result[y][x] = shared::color::Color::new(
-                    *buffer_iter.next().unwrap() as Float,
-                    *buffer_iter.next().unwrap() as Float,
-                    *buffer_iter.next().unwrap() as Float,
+                result[y][x] = shared_gpu::color_u8::ColorU8::new(
+                    *buffer_iter.next().unwrap(),
+                    *buffer_iter.next().unwrap(),
+                    *buffer_iter.next().unwrap(),
                 );
                 let _a = buffer_iter.next();
             }
