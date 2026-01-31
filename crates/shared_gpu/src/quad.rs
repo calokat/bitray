@@ -43,14 +43,14 @@ impl Quad {
         AABB::from_extrema(q, q + u + v).to_contain(&AABB::from_extrema(q + u, q + v))
     }
 
-    fn is_interior(&self, alpha: f32, beta: f32) -> Option<Vec2> {
+    fn is_interior(&self, alpha: f32, beta: f32) -> bool {
         let unit_interval = Interval::new(0.0, 1.0);
 
         if !unit_interval.contains(alpha) || !unit_interval.contains(beta) {
-            return None;
+            return false;
         }
 
-        return Some(Vec2::new(alpha, beta));
+        return true;
     }
 }
 
@@ -74,10 +74,10 @@ impl Hittable for Quad {
         let alpha = self.w.dot(planar_hit.cross(self.v));
         let beta = self.w.dot(self.u.cross(planar_hit));
 
-        if let Some(uv) = self.is_interior(alpha, beta) {
+        if self.is_interior(alpha, beta) {
             return (
                 true,
-                HitRecord::new(intersection, t, self.normal, r, self.material, uv),
+                HitRecord::new(intersection, t, self.normal, r, self.material, Vec2::ZERO),
             );
         }
         (false, HitRecord::miss())
