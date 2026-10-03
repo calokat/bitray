@@ -40,7 +40,7 @@ pub fn render(
                             world,
                             importants,
                             render_params.max_depth,
-                            Color::new(0.0, 0.0, 0.0),
+                            render_params.background_color,
                         )
                         .clamp();
                     }
