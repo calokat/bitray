@@ -7,10 +7,8 @@ use crate::hittable::Hittable;
 use crate::materials::material::Material;
 use crate::triangle::Triangle;
 use crate::vertex::Vertex;
-use crate::Float;
 use crate::{Mat4, Vec2, Vec3};
-use russimp::scene::{PostProcess, Scene};
-use russimp::Vector3D;
+use gltf::{self};
 
 pub struct MeshOptions {
     triangles: Vec<Triangle>,
@@ -18,71 +16,79 @@ pub struct MeshOptions {
 }
 
 impl MeshOptions {
-    pub fn from_file(filename: String) -> Self {
-        let scene = Scene::from_file(
-            &filename,
-            vec![
-                PostProcess::Triangulate,
-                PostProcess::CalculateTangentSpace,
-                PostProcess::JoinIdenticalVertices,
-                PostProcess::SortByPrimitiveType,
-                PostProcess::GenerateBoundingBoxes,
-            ],
-        )
-        .unwrap();
+    pub fn from_file(filename: String) -> Result<Vec<Self>, String> {
+        let (gltf, buffers, _) = gltf::import(filename).map_err(|e| e.to_string())?;
 
-        let mut triangles: Vec<Triangle> = Vec::new();
+        Ok(gltf
+            .meshes()
+            .map(|mesh| {
+                mesh.primitives().map(|prim| {
+                    let reader = prim.reader(|buffer| Some(&buffers[buffer.index()]));
+                    let indices: Vec<u32> = reader
+                        .read_indices()
+                        .map(|iter| iter.into_u32().collect())
+                        .unwrap_or_default();
 
-        for m in scene.meshes.iter() {
-            for f in m.faces.iter() {
-                let mut triangle_face: Vec<Vertex> = Vec::new();
-                for i in f.0.iter() {
-                    let pos = m.vertices[*i as usize];
-                    let normal = m.normals[*i as usize];
-                    let uv = {
-                        let opt = m.texture_coords[0].clone();
-                        opt.unwrap_or(Vec::new())
-                            .get(*i as usize)
-                            .cloned()
-                            .unwrap_or(Vector3D {
-                                x: 0.0,
-                                y: 0.0,
-                                z: 0.0,
-                            })
+                    let positions: Vec<[f32; 3]> = reader
+                        .read_positions()
+                        .map(|iter| iter.collect())
+                        .unwrap_or_default();
+
+                    let normals: Vec<[f32; 3]> = reader
+                        .read_normals()
+                        .map(|iter| iter.collect())
+                        .unwrap_or_default();
+
+                    let uvs: Vec<[f32; 2]> = reader
+                        .read_tex_coords(0)
+                        .map(|iter| iter.into_f32().collect())
+                        .unwrap_or_default();
+                    let vertices: Vec<Vertex> = indices
+                        .iter()
+                        .map(|i| {
+                            let position = positions[*i as usize];
+                            let normal = normals[*i as usize];
+                            let uv = uvs[*i as usize];
+                            Vertex {
+                                pos: Vec3 {
+                                    x: position[0],
+                                    y: position[1],
+                                    z: position[2],
+                                },
+                                normal: -Vec3 {
+                                    x: normal[0],
+                                    y: normal[1],
+                                    z: normal[2],
+                                },
+                                uv: Vec2 { x: uv[0], y: uv[1] },
+                            }
+                        })
+                        .collect();
+                    let (mesh_min, mesh_max) = {
+                        let mut min = Vec3::MAX;
+                        let mut max = Vec3::MIN;
+                        for v in &vertices {
+                            min = min.min(v.pos);
+                            max = max.min(v.pos);
+                        }
+                        (min, max)
                     };
-
-                    let v = Vertex {
-                        pos: Vec3::new(pos.x as Float, pos.y as Float, pos.z as Float),
-                        normal: Vec3::new(normal.x as Float, normal.y as Float, normal.z as Float),
-                        uv: Vec2::new(uv.x as Float, uv.y as Float),
-                    };
-                    triangle_face.push(v);
-                }
-                assert!(triangle_face.len() == 3);
-                triangles.push(Triangle {
-                    v0: triangle_face[0],
-                    v1: triangle_face[1],
-                    v2: triangle_face[2],
-                });
-            }
-        }
-
-        let russimp_aabb = scene.meshes[0].aabb;
-        let aabb_min = Vec3::new(
-            russimp_aabb.min.x as Float,
-            russimp_aabb.min.y as Float,
-            russimp_aabb.min.z as Float,
-        );
-        let aabb_max = Vec3::new(
-            russimp_aabb.max.x as Float,
-            russimp_aabb.max.y as Float,
-            russimp_aabb.max.z as Float,
-        );
-
-        Self {
-            triangles,
-            aabb: AABB::from_extrema(aabb_min, aabb_max),
-        }
+                    let triangles: Vec<Triangle> = vertices
+                        .chunks(3)
+                        .map(|vc| Triangle {
+                            v0: vc[0],
+                            v1: vc[1],
+                            v2: vc[2],
+                        })
+                        .collect();
+                    MeshOptions {
+                        triangles,
+                        aabb: AABB::from_extrema(mesh_min, mesh_max),
+                    }
+                })
+            })
+            .flatten()
+            .collect())
     }
 }
 
@@ -119,7 +125,7 @@ impl<'a> Hittable for Mesh<'a> {
         &self,
         r: &crate::ray::Ray,
         ray_t: crate::interval::Interval,
-    ) -> Option<crate::hittable::HitRecord> {
+    ) -> Option<crate::hittable::HitRecord<'_>> {
         for t in self.options.triangles.iter() {
             let mut rotated_ray = r.clone();
             rotated_ray.origin =
