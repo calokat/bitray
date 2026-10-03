@@ -6,11 +6,14 @@ use bitray::image_writer;
 use bitray::materials::diffuse_light::DiffuseLightMaterial;
 use bitray::materials::lambert::Lambert;
 use bitray::materials::metal::Metal;
+use bitray::mesh::Mesh;
+use bitray::mesh::MeshOptions;
 use bitray::quad::Quad;
 use bitray::render_parameters::RenderParameters;
 use bitray::renderers;
 use bitray::sphere::Sphere;
 use bitray::texture::ColorTexture2D;
+use bitray::Mat4;
 use bitray::Vec3;
 
 fn main() {
@@ -89,22 +92,15 @@ fn main() {
             "Red Sphere".into(),
         );
 
-        let objects: Vec<&dyn Hittable> = vec![
-            &light,
-            &floor,
-            &wall_left,
-            &wall_right,
-            &wall_back,
-            &ceiling,
-            &sphere,
-        ];
-        let world = HittableList::new(objects);
+        let mesh_opts = MeshOptions::from_file("models/hourglass.glb".to_string());
+
+        let mesh_opts = mesh_opts.ok();
 
         let render_params = RenderParameters {
             aspect_ratio: 16.0 / 9.0,
             image_width: 1920,
             image_height: 1080,
-            num_samples: 500,
+            num_samples: 50,
             background_color: Color::new(0.0, 0.0, 0.0),
             max_depth: 20,
         };
@@ -120,13 +116,53 @@ fn main() {
 
         let render_fn = renderers::rayon::render;
 
-        let scene_render = render_fn(&camera, &world, importants, render_params);
+        match mesh_opts {
+            Some(mo) => {
+                let mesh = Mesh::new(
+                    &mo[0],
+                    &mat_metal,
+                    "bad_guy".to_string(),
+                    Mat4::from_translation(Vec3::new(500.0f32, 50.0f32, 500.0f32)),
+                );
+                let objects: Vec<&dyn Hittable> = vec![
+                    &light,
+                    &floor,
+                    &wall_left,
+                    &wall_right,
+                    &wall_back,
+                    &ceiling,
+                    &mesh,
+                ];
+                let world = HittableList::new(objects);
+                let scene_render = render_fn(&camera, &world, importants, render_params);
 
-        image_writer::write_image(
-            &scene_render,
-            (render_params.image_width, render_params.image_height),
-            render_params.num_samples,
-        )
-        .expect("Image should be writable");
+                image_writer::write_image(
+                    &scene_render,
+                    (render_params.image_width, render_params.image_height),
+                    render_params.num_samples,
+                )
+                .expect("Image should be writable");
+            }
+            None => {
+                let objects: Vec<&dyn Hittable> = vec![
+                    &light,
+                    &floor,
+                    &wall_left,
+                    &wall_right,
+                    &wall_back,
+                    &ceiling,
+                    &sphere,
+                ];
+                let world = HittableList::new(objects);
+                let scene_render = render_fn(&camera, &world, importants, render_params);
+
+                image_writer::write_image(
+                    &scene_render,
+                    (render_params.image_width, render_params.image_height),
+                    render_params.num_samples,
+                )
+                .expect("Image should be writable");
+            }
+        }
     }
 }
