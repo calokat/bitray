@@ -62,7 +62,7 @@ impl<'a> Hittable for Quad<'a> {
         &self,
         r: &crate::ray::Ray,
         ray_t: crate::interval::Interval,
-    ) -> Option<crate::hittable::HitRecord> {
+    ) -> Option<crate::hittable::HitRecord<'_>> {
         let denom = self.normal.dot(r.direction);
         if denom.abs() < 1.0e-8 {
             return None;

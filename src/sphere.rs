@@ -49,7 +49,7 @@ impl<'a> Sphere<'a> {
 }
 
 impl<'a> Hittable for Sphere<'a> {
-    fn hit(&self, r: &crate::ray::Ray, ray_t: Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &crate::ray::Ray, ray_t: Interval) -> Option<HitRecord<'_>> {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
         let half_b = oc.dot(r.direction);

@@ -49,7 +49,7 @@ impl<'a> HitRecord<'a> {
 }
 
 pub trait Hittable: Send + Sync + Debug {
-    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord<'_>>;
     fn bounding_box(&self) -> AABB;
     fn get_name(&self) -> &String;
     fn pdf_value(&self, _origin: &Vec3, _direction: &Vec3) -> Float {
@@ -81,7 +81,7 @@ impl<'a> HittableList<'a> {
 }
 
 impl<'a> Hittable for HittableList<'a> {
-    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord<'_>> {
         let mut rec = None;
         let mut closest_so_far = ray_t.max;
 

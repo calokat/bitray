@@ -115,7 +115,7 @@ impl<'a> Hittable for BVH<'a> {
         &self,
         r: &crate::ray::Ray,
         ray_t: crate::interval::Interval,
-    ) -> Option<crate::hittable::HitRecord> {
+    ) -> Option<crate::hittable::HitRecord<'_>> {
         if !self.aabb.hit(r, ray_t) {
             return None;
         }
