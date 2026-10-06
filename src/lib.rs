@@ -14,6 +14,7 @@ pub mod rand_vec3;
 pub mod ray;
 pub mod render_parameters;
 pub mod renderers;
+pub mod scenes;
 pub mod sphere;
 pub mod texture;
 pub mod triangle;
