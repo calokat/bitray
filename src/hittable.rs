@@ -58,16 +58,22 @@ pub trait Hittable: Send + Sync + Debug {
     fn random_vector_to_surface(&self, _origin: &Vec3) -> Vec3 {
         Vec3::X
     }
+    fn centroid(&self) -> Vec3 {
+        self.bounding_box().centroid()
+    }
+    fn surface_area(&self) -> f32 {
+        self.bounding_box().surface_area()
+    }
 }
 
 pub struct HittableList<'a> {
-    pub objects: Vec<&'a dyn Hittable>,
+    pub objects: Vec<Box<dyn Hittable + 'a>>,
     aabb: AABB,
     name: String,
 }
 
 impl<'a> HittableList<'a> {
-    pub fn new(objects: Vec<&'a dyn Hittable>) -> Self {
+    pub fn new(objects: Vec<Box<dyn Hittable + 'a>>) -> Self {
         let mut bb = AABB::default();
         for h in &objects {
             bb = bb.to_contain(&h.bounding_box());
@@ -136,5 +142,22 @@ impl<'a> Debug for HittableList<'a> {
             f.write_str("EMPTY\n")?;
         }
         Ok(())
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct NeverHittable(String);
+
+impl Hittable for NeverHittable {
+    fn bounding_box(&self) -> AABB {
+        AABB::default()
+    }
+
+    fn get_name(&self) -> &String {
+        &self.0
+    }
+
+    fn hit(&self, _: &Ray, _: Interval) -> Option<HitRecord<'_>> {
+        None
     }
 }

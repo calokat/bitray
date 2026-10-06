@@ -1,12 +1,14 @@
-use std::{borrow::Borrow, cmp::Ordering, fmt::Debug};
+use std::{borrow::Borrow, default, fmt::Debug, process::exit};
 
-use rand::Rng;
-
-use crate::{aabb::AABB, hittable::Hittable};
+use crate::{
+    aabb::AABB,
+    hittable::{Hittable, HittableList, NeverHittable},
+    Float, Vec3,
+};
 
 enum BVHValue<'a> {
     SubBVH(Box<BVH<'a>>),
-    Leaf(&'a dyn Hittable),
+    Leaf(Box<dyn Hittable + 'a>),
 }
 
 impl<'a> Debug for BVHValue<'a> {
@@ -31,82 +33,129 @@ pub struct BVH<'a> {
 }
 
 impl<'a> BVH<'a> {
-    fn box_x_compare(a: &&dyn Hittable, b: &&dyn Hittable) -> Ordering {
-        match a.bounding_box().z.min < b.bounding_box().z.min {
-            true => Ordering::Less,
-            false => Ordering::Greater,
-        }
+    pub fn new(hit_list: Vec<Box<dyn Hittable + 'a>>) -> Self {
+        Self::build_sah(hit_list)
     }
 
-    fn box_y_compare(a: &&dyn Hittable, b: &&dyn Hittable) -> Ordering {
-        match a.bounding_box().z.min < b.bounding_box().z.min {
-            true => Ordering::Less,
-            false => Ordering::Greater,
-        }
-    }
-
-    fn box_z_compare(a: &&dyn Hittable, b: &&dyn Hittable) -> Ordering {
-        match a.bounding_box().z.min < b.bounding_box().z.min {
-            true => Ordering::Less,
-            false => Ordering::Greater,
-        }
-    }
-    pub fn new(hit_list: Vec<&'a dyn Hittable>) -> Self {
-        Self::build(hit_list)
-    }
-    fn build(hit_list: Vec<&'a dyn Hittable>) -> Self {
-        let i: i32 = rand::thread_rng().gen_range(0..3);
-
-        let span = hit_list.len();
-        let mut sorted_objects = hit_list;
-        sorted_objects.sort_by(|a, b| match i {
-            0 => Self::box_x_compare(a, b),
-            1 => Self::box_y_compare(a, b),
-            2 => Self::box_z_compare(a, b),
-            _ => unreachable!(),
+    fn aabb_from_hittable_slice(slice: &[Box<dyn Hittable + 'a>]) -> AABB {
+        let mut bb = AABB::default();
+        slice.iter().for_each(|h| {
+            bb = bb.to_contain(&h.bounding_box());
         });
-        let name: String = "BVH".into();
-        if span == 1 {
-            let left = sorted_objects[0];
-            Self {
-                aabb: left.bounding_box(),
-                left: BVHValue::Leaf(left),
-                right: BVHValue::Leaf(left),
-                name,
-            }
-        } else if span == 2 {
-            let left = sorted_objects[0];
-            let right = sorted_objects[1];
-            Self {
-                aabb: AABB::to_contain(&left.bounding_box(), &right.bounding_box()),
-                left: BVHValue::Leaf(left),
-                right: BVHValue::Leaf(right),
-                name,
-            }
-        } else {
-            let mid = span / 2;
-            let mut left_list = vec![];
-            let mut right_list = vec![];
+        bb
+    }
 
-            for (i, h) in sorted_objects.into_iter().enumerate() {
-                if i < mid {
-                    left_list.push(h);
-                } else {
-                    right_list.push(h);
+    fn build_sah(hit_list: Vec<Box<dyn Hittable + 'a>>) -> Self {
+        #[repr(usize)]
+        #[derive(Clone, Copy)]
+        enum Axis {
+            X = 0usize,
+            Y = 1usize,
+            Z = 2usize,
+        }
+
+        struct SahSortOutcome {
+            cost: Float,
+            axis: Axis,
+            separating_index: usize,
+        }
+
+        #[derive(Clone, Copy)]
+        struct SahInput {
+            centroid: Vec3,
+            aabb: AABB,
+        }
+
+        fn aabb_from_sah_inputs(inputs: Vec<&SahInput>) -> AABB {
+            let mut bb = AABB::default();
+            inputs.iter().for_each(|i| bb = bb.to_contain(&i.aabb));
+            bb
+        }
+
+        let list_bb = Self::aabb_from_hittable_slice(&hit_list);
+        let area_root = list_bb.surface_area();
+
+        let mut hittable_inputs: Vec<SahInput> = hit_list
+            .iter()
+            .map(|h| SahInput {
+                centroid: h.centroid(),
+                aabb: h.bounding_box(),
+            })
+            .collect();
+        let sort_outcome = [Axis::X, Axis::Y, Axis::Z]
+            .iter()
+            .map(|axis| {
+                hittable_inputs.sort_by(|a, b| {
+                    a.centroid[*axis as usize].total_cmp(&b.centroid[*axis as usize])
+                });
+                return (1..hittable_inputs.len())
+                    .map(|i| {
+                        let (left_objects, right_objects): (Vec<_>, Vec<_>) = hittable_inputs
+                            .iter()
+                            .enumerate()
+                            .partition(|(a, _)| *a < i);
+                        let left_bb =
+                            aabb_from_sah_inputs(left_objects.iter().map(|i| i.1).collect());
+                        let left_sa = left_bb.surface_area();
+
+                        let right_bb =
+                            aabb_from_sah_inputs(right_objects.iter().map(|i| i.1).collect());
+                        let right_sa = right_bb.surface_area();
+
+                        let sah_cost = 1.0
+                            + (left_sa / area_root) * left_objects.len() as Float
+                            + (right_sa / area_root) * right_objects.len() as Float;
+                        return SahSortOutcome {
+                            cost: sah_cost,
+                            separating_index: i,
+                            axis: *axis,
+                        };
+                    })
+                    .min_by(|a, b| a.cost.total_cmp(&b.cost));
+            })
+            .filter_map(|o| o)
+            .min_by(|a, b| a.cost.total_cmp(&b.cost));
+        if let Some(o) = sort_outcome {
+            if o.cost < hit_list.len() as f32 {
+                let separating_value = hit_list[o.separating_index].centroid()[o.axis as usize];
+                let (left_hittables, right_hittables): (Vec<_>, Vec<_>) = hit_list
+                    .into_iter()
+                    .enumerate()
+                    .partition(|(_, h)| h.centroid()[o.axis as usize] < separating_value);
+                if left_hittables.is_empty() || right_hittables.is_empty() {
+                    let hittable_iter = if left_hittables.is_empty() {
+                        right_hittables.into_iter()
+                    } else {
+                        left_hittables.into_iter()
+                    };
+                    let hittable_list: Vec<_> = hittable_iter.map(|(_, h)| h).collect();
+                    let aabb = Self::aabb_from_hittable_slice(&hittable_list);
+                    return Self {
+                        left: BVHValue::Leaf(Box::new(HittableList::new(hittable_list))),
+                        right: BVHValue::Leaf(Box::new(NeverHittable::default())),
+                        aabb,
+                        name: String::new(),
+                    };
                 }
-            }
-
-            let left = Self::build(left_list);
-            let right = Self::build(right_list);
-            let aabb = AABB::to_contain(&left.bounding_box(), &right.bounding_box());
-
-            Self {
-                left: BVHValue::SubBVH(Box::new(left)),
-                right: BVHValue::SubBVH(Box::new(right)),
-                aabb,
-                name,
+                return Self {
+                    left: BVHValue::SubBVH(Box::new(Self::build_sah(
+                        left_hittables.into_iter().map(|(_, h)| h).collect(),
+                    ))),
+                    right: BVHValue::SubBVH(Box::new(Self::build_sah(
+                        right_hittables.into_iter().map(|(_, h)| h).collect(),
+                    ))),
+                    aabb: list_bb,
+                    name: String::new(),
+                };
             }
         }
+        let hittable_list = HittableList::new(hit_list);
+        return Self {
+            left: BVHValue::Leaf(Box::new(hittable_list)),
+            right: BVHValue::Leaf(Box::new(NeverHittable::default())),
+            aabb: list_bb,
+            name: String::new(),
+        };
     }
 }
 

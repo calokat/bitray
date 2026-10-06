@@ -1,5 +1,5 @@
 use crate::interval::Interval;
-use crate::{Mat4, Vec3};
+use crate::{Float, Mat4, Vec3};
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct AABB {
@@ -122,5 +122,15 @@ impl AABB {
     pub fn transform(&self, t: Mat4) -> Self {
         let transformed_points = self.get_points().map(|p| (t * p.extend(1.0)).truncate());
         Self::from_points(transformed_points)
+    }
+
+    pub fn centroid(&self) -> Vec3 {
+        self.min() + self.max() / 2.0
+    }
+
+    pub fn surface_area(&self) -> Float {
+        let base_area = (self.x.max - self.x.min) * (self.z.max - self.z.min);
+        let base_perimeter = (self.x.max - self.x.min) * 2.0 + (self.z.max - self.z.min) * 2.0;
+        return base_area * 2.0 + (self.y.max - self.y.min) * base_perimeter;
     }
 }
