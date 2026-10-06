@@ -1,13 +1,6 @@
 use crate::{
-    camera::Camera,
-    color::Color,
-    hittable::Hittable,
-    interval::Interval,
-    pdf::{HittablePDF, MixturePDF, PDF},
-    rand_vec3::random_vec_unit_disk,
-    ray::Ray,
-    render_parameters::RenderParameters,
-    Float, Vec3,
+    camera::Camera, color::Color, hittable::Hittable, interval::Interval,
+    rand_vec3::random_vec_unit_disk, ray::Ray, render_parameters::RenderParameters, Float, Vec3,
 };
 
 use rand::random;
@@ -16,7 +9,6 @@ use rayon::prelude::*;
 pub fn render(
     camera: &Camera,
     world: &dyn Hittable,
-    importants: &dyn Hittable,
     render_params: RenderParameters,
 ) -> Vec<Vec<Color>> {
     let input_row: Vec<(i32, i32)> = vec![(0, 0); render_params.image_width as usize];
@@ -38,7 +30,6 @@ pub fn render(
                         color += ray_color(
                             &generate_ray(camera, (*i, *j)),
                             world,
-                            importants,
                             render_params.max_depth,
                             render_params.background_color,
                         )
@@ -54,13 +45,7 @@ pub fn render(
     return rendered_image;
 }
 
-fn ray_color(
-    ray: &Ray,
-    world: &dyn Hittable,
-    important_objs: &dyn Hittable,
-    depth: i32,
-    background_color: Color,
-) -> Color {
+fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32, background_color: Color) -> Color {
     if depth <= 0 {
         return Color::new(1.0, 1.0, 1.0);
     }
@@ -72,33 +57,8 @@ fn ray_color(
         },
     ) {
         if let Some(mat_hit_res) = rec.material.scatter(ray, &rec) {
-            if mat_hit_res.pdf.is_none() {
-                return mat_hit_res.color
-                    * ray_color(
-                        &mat_hit_res.ray,
-                        world,
-                        important_objs,
-                        depth - 1,
-                        background_color,
-                    );
-            }
-            let mat_pdf = mat_hit_res.pdf.unwrap();
-            let pdf = HittablePDF::new(rec.p, important_objs);
-            let mix_pdf = MixturePDF::new(&pdf, &*mat_pdf);
-            let scattered = Ray::new(rec.p, mix_pdf.generate());
-            let pdf_value = mix_pdf.value(&scattered.direction);
-            let scattering_pdf = rec.material.scattering_pdf(ray, &rec, &scattered);
-
             return mat_hit_res.color
-                * ray_color(
-                    &scattered,
-                    world,
-                    important_objs,
-                    depth - 1,
-                    background_color,
-                )
-                * scattering_pdf
-                / pdf_value;
+                * ray_color(&mat_hit_res.ray, world, depth - 1, background_color);
         } else {
             return rec.material.emit_color(ray, &rec);
         }
