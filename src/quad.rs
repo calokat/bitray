@@ -43,7 +43,7 @@ impl<'a> Quad<'a> {
     }
 
     fn build_aabb(q: Vec3, u: Vec3, v: Vec3) -> AABB {
-        AABB::from_extrema(q, q + u + v).to_contain(&AABB::from_extrema(q + u, q + v))
+        AABB::from_extrema(q, q + u + v).to_contain_aabb(&AABB::from_extrema(q + u, q + v))
     }
 
     fn is_interior(&self, alpha: Float, beta: Float) -> Option<Vec2> {
@@ -98,8 +98,8 @@ impl<'a> Hittable for Quad<'a> {
         self.aabb
     }
 
-    fn get_name(&self) -> &String {
-        &self.name
+    fn get_name(&self) -> String {
+        self.name.clone()
     }
 
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {

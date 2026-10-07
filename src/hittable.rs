@@ -51,7 +51,7 @@ impl<'a> HitRecord<'a> {
 pub trait Hittable: Send + Sync + Debug {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord<'_>>;
     fn bounding_box(&self) -> AABB;
-    fn get_name(&self) -> &String;
+    fn get_name(&self) -> String;
     fn pdf_value(&self, _origin: &Vec3, _direction: &Vec3) -> Float {
         1.0
     }
@@ -76,7 +76,7 @@ impl<'a> HittableList<'a> {
     pub fn new(objects: Vec<Box<dyn Hittable + 'a>>) -> Self {
         let mut bb = AABB::default();
         for h in &objects {
-            bb = bb.to_contain(&h.bounding_box());
+            bb = bb.to_contain_aabb(&h.bounding_box());
         }
         Self {
             objects,
@@ -111,8 +111,8 @@ impl<'a> Hittable for HittableList<'a> {
         self.aabb
     }
 
-    fn get_name(&self) -> &String {
-        return &self.name;
+    fn get_name(&self) -> String {
+        return self.name.clone();
     }
 
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {
@@ -153,8 +153,8 @@ impl Hittable for NeverHittable {
         AABB::default()
     }
 
-    fn get_name(&self) -> &String {
-        &self.0
+    fn get_name(&self) -> String {
+        self.0.clone()
     }
 
     fn hit(&self, _: &Ray, _: Interval) -> Option<HitRecord<'_>> {

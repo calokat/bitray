@@ -49,6 +49,13 @@ impl Interval {
         }
     }
 
+    pub fn to_contain_value(&self, other: Float) -> Self {
+        Self {
+            min: Float::min(self.min, other),
+            max: Float::max(self.max, other),
+        }
+    }
+
     pub fn clamp_min(&mut self, clamp: Float) {
         self.min = Float::max(self.min, clamp);
     }

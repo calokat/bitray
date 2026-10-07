@@ -82,8 +82,8 @@ impl<'a> Hittable for Sphere<'a> {
         )
     }
 
-    fn get_name(&self) -> &String {
-        &self.name
+    fn get_name(&self) -> String {
+        self.name.clone()
     }
 
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> Float {

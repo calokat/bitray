@@ -69,11 +69,19 @@ impl AABB {
         return true;
     }
 
-    pub fn to_contain(&self, other: &Self) -> Self {
+    pub fn to_contain_aabb(&self, other: &Self) -> Self {
         Self {
             x: self.x.to_contain(&other.x),
             y: self.y.to_contain(&other.y),
             z: self.z.to_contain(&other.z),
+        }
+    }
+
+    pub fn to_contain_point(&self, other: Vec3) -> Self {
+        Self {
+            x: self.x.to_contain_value(other.x),
+            y: self.y.to_contain_value(other.y),
+            z: self.z.to_contain_value(other.z),
         }
     }
 

@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::fmt::Write;
 
 use crate::aabb::AABB;
+use crate::bvh::BVH;
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 use crate::materials::material::Material;
@@ -10,13 +11,13 @@ use crate::vertex::Vertex;
 use crate::{Mat4, Vec2, Vec3};
 use gltf::{self};
 
-pub struct MeshOptions {
-    triangles: Vec<Triangle>,
+pub struct MeshOptions<'a> {
+    bvh: BVH<'a>,
     aabb: AABB,
 }
 
-impl MeshOptions {
-    pub fn from_file(filename: String) -> Result<Vec<Self>, String> {
+impl<'a> MeshOptions<'a> {
+    pub fn from_file(filename: String, material: &'a dyn Material) -> Result<Vec<Self>, String> {
         let (gltf, buffers, _) = gltf::import(filename).map_err(|e| e.to_string())?;
 
         Ok(gltf
@@ -73,16 +74,19 @@ impl MeshOptions {
                         }
                         (min, max)
                     };
-                    let triangles: Vec<Triangle> = vertices
+                    let triangles: Vec<Box<dyn Hittable>> = vertices
                         .chunks(3)
-                        .map(|vc| Triangle {
-                            v0: vc[0],
-                            v1: vc[1],
-                            v2: vc[2],
+                        .map(|vc| {
+                            Box::new(Triangle {
+                                v0: vc[0],
+                                v1: vc[1],
+                                v2: vc[2],
+                                material,
+                            }) as Box<dyn Hittable>
                         })
                         .collect();
                     MeshOptions {
-                        triangles,
+                        bvh: BVH::new(triangles),
                         aabb: AABB::from_extrema(mesh_min, mesh_max),
                     }
                 })
@@ -93,7 +97,7 @@ impl MeshOptions {
 }
 
 pub struct Mesh<'a> {
-    options: &'a MeshOptions,
+    options: &'a MeshOptions<'a>,
     material: &'a dyn Material,
     name: String,
     transform: Mat4,
@@ -126,23 +130,20 @@ impl<'a> Hittable for Mesh<'a> {
         r: &crate::ray::Ray,
         ray_t: crate::interval::Interval,
     ) -> Option<crate::hittable::HitRecord<'_>> {
-        for t in self.options.triangles.iter() {
-            let mut rotated_ray = r.clone();
-            rotated_ray.origin =
-                (self.inverse_transform * rotated_ray.origin.extend(1.0)).truncate();
-            rotated_ray.direction =
-                (self.inverse_transform * rotated_ray.direction.extend(0.0)).truncate();
-            if let Some(intersection) = t.ray_hit(&rotated_ray, &ray_t) {
-                return Some(HitRecord::new(
-                    (self.transform * intersection.p.extend(1.0)).truncate(),
-                    intersection.t,
-                    (self.inverse_transform.transpose() * intersection.normal.extend(0.0))
-                        .truncate(),
-                    r,
-                    self.material,
-                    intersection.uv,
-                ));
-            }
+        let mut rotated_ray = r.clone();
+        rotated_ray.origin = (self.inverse_transform * rotated_ray.origin.extend(1.0)).truncate();
+        rotated_ray.direction =
+            (self.inverse_transform * rotated_ray.direction.extend(0.0)).truncate();
+        let hit_record = self.options.bvh.hit(&rotated_ray, ray_t);
+        if let Some(hr) = hit_record {
+            return Some(HitRecord::new(
+                (self.transform * hr.p.extend(1.0)).truncate(),
+                hr.t,
+                (self.inverse_transform.transpose() * hr.normal.extend(0.0)).truncate(),
+                r,
+                self.material,
+                hr.uv,
+            ));
         }
         return None;
     }
@@ -151,8 +152,8 @@ impl<'a> Hittable for Mesh<'a> {
         self.aabb
     }
 
-    fn get_name(&self) -> &String {
-        &self.name
+    fn get_name(&self) -> String {
+        self.name.clone()
     }
 }
 

@@ -40,7 +40,7 @@ impl<'a> BVH<'a> {
     fn aabb_from_hittable_slice(slice: &[Box<dyn Hittable + 'a>]) -> AABB {
         let mut bb = AABB::default();
         slice.iter().for_each(|h| {
-            bb = bb.to_contain(&h.bounding_box());
+            bb = bb.to_contain_aabb(&h.bounding_box());
         });
         bb
     }
@@ -68,7 +68,7 @@ impl<'a> BVH<'a> {
 
         fn aabb_from_sah_inputs(inputs: Vec<&SahInput>) -> AABB {
             let mut bb = AABB::default();
-            inputs.iter().for_each(|i| bb = bb.to_contain(&i.aabb));
+            inputs.iter().for_each(|i| bb = bb.to_contain_aabb(&i.aabb));
             bb
         }
 
@@ -192,8 +192,8 @@ impl<'a> Hittable for BVH<'a> {
         self.aabb
     }
 
-    fn get_name(&self) -> &String {
-        return &self.name;
+    fn get_name(&self) -> String {
+        return self.name.clone();
     }
 }
 
